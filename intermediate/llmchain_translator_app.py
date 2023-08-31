@@ -1,17 +1,12 @@
 import streamlit as st
 from dotenv import find_dotenv, load_dotenv
-from langchain import LLMChain, PromptTemplate
-from langchain.llms import OpenAI
-from loguru import logger
-
-
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain import LLMChain
 from langchain.chains import LLMChain
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts.chat import (ChatPromptTemplate,
+                                    HumanMessagePromptTemplate,
+                                    SystemMessagePromptTemplate)
+from loguru import logger
 
 _ = load_dotenv(find_dotenv())
 

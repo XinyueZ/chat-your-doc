@@ -69,8 +69,8 @@ class App:
                     fetch_k=6,
                     lambda_mult=1,
                 )
-                a = st.selectbox("Answers", [a for a in range(len(answers))])
-                st.write(f"{answers[int(a)].page_content}")
+                answer_idx = st.selectbox("Answers", [a for a in range(len(answers))])
+                st.write(f"{answers[int(answer_idx)].page_content}")
 
 
 if __name__ == "__main__":

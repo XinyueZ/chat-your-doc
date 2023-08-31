@@ -22,6 +22,7 @@ class App:
         self.llm_chain = LLMChain(prompt=self.prompt, llm=self.llm)
 
     def __call__(self):
+        st.write("# Q&A")
         question = st.text_input("Ask a question")
         if question:
             answers = self.llm_chain.run(question)
@@ -30,6 +31,5 @@ class App:
 
 
 if __name__ == "__main__":
-    # Run:  streamlit run simply/open_api_llm_app.py --server.port 8880 --server.enableCORS false
     app = App()
     app()

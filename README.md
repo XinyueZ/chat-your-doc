@@ -10,4 +10,5 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 | App | Description | Launch | Demo |
 | --- | --- | --- | --- |
 | [open_api_llm_app.py](simply/open_api_llm_app.py)  | Use OpenAI LLM to answer simple question | `streamlit run simply/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
-| [sim_app.py](simply/sim_app.py)  | Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run simply/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| [sim_app.py](intermediate/sim_app.py)  | Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| [llmchain_translator_app.py](intermediate/llmchain_translator_app.py)  | Use LLMChain to do language translation | `streamlit run intermediate/llmchain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llmchain_translator_app.gif)  ![](assets/guide/llmchain_translator_app.png) | 

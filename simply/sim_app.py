@@ -1,16 +1,12 @@
 import os
-from langchain.document_loaders import PyPDFLoader, UnstructuredPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-
 
 import streamlit as st
-
+from dotenv import find_dotenv, load_dotenv
+from langchain.document_loaders import PyPDFLoader, UnstructuredPDFLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
 from loguru import logger
-
-from dotenv import load_dotenv, find_dotenv
 
 _ = load_dotenv(find_dotenv())
 
@@ -19,7 +15,7 @@ _ = load_dotenv(find_dotenv())
 
 class App:
     def __init__(self) -> None:
-        self.persist_directory = "data"
+        self.persist_directory = "db"
         self.embeddings = OpenAIEmbeddings()
 
     def load_and_split(self, path: str, is_unstructured: bool = True):
@@ -72,11 +68,12 @@ class App:
                     k=2,
                     fetch_k=6,
                     lambda_mult=1,
-                ) 
+                )
                 a = st.selectbox("Answers", [a for a in range(len(answers))])
                 st.write(f"{answers[int(a)].page_content}")
 
 
 if __name__ == "__main__":
+    # Run:  streamlit run simply/sim_app.py --server.port 8888 --server.enableCORS false
     app = App()
     app()

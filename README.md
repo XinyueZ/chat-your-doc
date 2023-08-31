@@ -3,7 +3,22 @@ Chat Your Doc (Experimental)
 
 Chat Your Doc is an experimental project aimed at exploring various applications based on LLM. Although it is nominally a chatbot project, its purpose is broader. The project explores various applications using tools such as [LangChain](https://www.langchain.com/) or [scikit-learn LLM](https://github.com/iryna-kondr/scikit-llm). In the "Lab Apps" section, you can find many examples, including simple and complex ones. The project focuses on researching and exploring various LLM applications, while also incorporating other fields such as UX and computer vision. The "Lab App" section includes a table with links to various apps, descriptions, launch commands, and demos.
 
- 
+----
+# Setup
+
+## Conda
+
+```bash
+conda env create -n chat-ur-doc -f environment.yml
+conda activate chat-ur-doc
+```
+
+## Pip
+
+```bash
+pip install -r requirements.txt
+``` 
+----
 
 # Lab Apps
 

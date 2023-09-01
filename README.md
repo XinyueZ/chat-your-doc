@@ -35,4 +35,4 @@ pip install -r requirements.txt
 
 | App | Level| Models & Components|Description | Launch | Demo |
 | --- | --- |--- |--- | --- | --- |
-| [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |intermediate|OpenAI, Chroma, load_qa_chain->BaseCombineDocumentsChain, LangChain| Get key info from PDF file | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+| [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |intermediate|OpenAI, Chroma, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ass info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 

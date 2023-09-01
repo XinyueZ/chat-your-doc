@@ -22,9 +22,17 @@ pip install -r requirements.txt
 
 # Lab Apps
 
+## Starter
+
 | App | Level| Models & Components|Description | Launch | Demo |
 | --- | --- |--- |--- | --- | --- |
 | [i-ask.sh](simple/i-ask.sh)  |simple|OpenAI http-request| Simply ask & answer via OpenAI API | `i-ask.sh "Who is Joe Biden?"` | ![](assets/screens/i-ask.gif) | 
 | [open_api_llm_app.py](simple/open_api_llm_app.py)  |simple|OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
 | [sim_app.py](intermediate/sim_app.py)  |intermediate|Chroma, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
-| [llmchain_translator_app.py](intermediate/llmchain_translator_app.py)  |intermediate|ChatOpenAI, LLMChain, LangChain| Use LLMChain to do language translation | `streamlit run intermediate/llmchain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llmchain_translator_app.gif)  ![](assets/guide/llmchain_translator_app.png) | 
+| [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  |intermediate|ChatOpenAI, LLMChain, LangChain| Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
+
+## Advanced
+
+| App | Level| Models & Components|Description | Launch | Demo |
+| --- | --- |--- |--- | --- | --- |
+| [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |intermediate|OpenAI, Chroma, load_qa_chain->BaseCombineDocumentsChain, LangChain| Get key info from PDF file | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 

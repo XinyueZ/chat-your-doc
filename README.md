@@ -6,6 +6,9 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 ----
 
 - [Setup](#setup)
+    - [Some keys](#some-keys)
+    - [Conda](#conda)
+    - [Pip](#pip)   
 - [Lab Apps](#lab-apps)
   - [Simple](#simple)
   - [Intermediate](#intermediate)
@@ -14,6 +17,16 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 
 ----
 # Setup
+
+## Some keys
+
+For OpenAI, set API-KEY to your environment variables.
+
+[Get OpenAI API-KEY](https://platform.openai.com/account/api-keys)
+
+```bash
+export OPENAI_API_KEY="sk-$TJHGFHJDSFDGAFDFRTHT§$%$%&§%&"
+```
 
 ## Conda
 
@@ -36,6 +49,7 @@ pip install -r requirements.txt
 | App | Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
 | [i-ask.sh](simple/i-ask.sh)  |OpenAI http-request| Simply ask & answer via OpenAI API | `i-ask.sh "Who is Joe Biden?"` | ![](assets/screens/i-ask.gif) | 
+| [chat_openai.py](simple/chat_openai.py)  |ChatOpenAI, LangChain | Just one chat session  | `streamlit run simple/chat_openai.py --server.port 8000 --server.enableCORS false` | ![](assets/screens/chat_openai.gif) | 
 | [open_api_llm_app.py](simple/open_api_llm_app.py)  |OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
 
 ## Intermediate

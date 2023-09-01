@@ -72,11 +72,32 @@ pip install -r requirements.txt
 
 <details>
 <summary><span style="font-weight: bold;">Prompt</span></summary>
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  td {
+    padding: 8px;
+    text-align: center;
+  }
+  @media screen and (max-width: 600px) {
+    table, td, tr {
+      display: block;
+    }
+    td {
+      text-align: center;
+      border-bottom: none;
+    }
+  }
+</style>
+
 <table>
   <tr>
     <td><img src="assets/notes/openai_moderation.png"></td>
     <td><img src="assets/notes/chain-of-thought-reasoning.png"></td>
     <td><img src="assets/notes/why_langchain_prompt_template.png"></td>
+    <td><img src="assets/notes/memory.png"></td>
   </tr>
 </table>
 </details>

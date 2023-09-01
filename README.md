@@ -81,6 +81,10 @@ pip install -r requirements.txt
     padding: 8px;
     text-align: center;
   }
+  img {
+    width: 100%;
+    height: auto;
+  }
   @media screen and (max-width: 600px) {
     table, td, tr {
       display: block;
@@ -98,6 +102,8 @@ pip install -r requirements.txt
     <td><img src="assets/notes/chain-of-thought-reasoning.png"></td>
     <td><img src="assets/notes/why_langchain_prompt_template.png"></td>
     <td><img src="assets/notes/memory.png"></td>
+    <td><img src="assets/notes/memory_type_1.png"></td>
+    <td><img src="assets/notes/memory_type_2.png"></td>
   </tr>
 </table>
 </details>

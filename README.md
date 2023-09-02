@@ -68,7 +68,7 @@ pip install -r requirements.txt
 
 # Notes
 
-> "These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how."
+> These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how.
 
 <details>
 <summary><span style="font-weight: bold;">Prompt</span></summary>

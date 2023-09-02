@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 | App | Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| 💥 [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
 | [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain| Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
 
 ## Advanced

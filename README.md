@@ -56,19 +56,19 @@ pip install -r requirements.txt
 
 | App | Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| [sim_app.py](intermediate/sim_app.py)  | Chroma, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| 💥 [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
 | [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain| Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
 
 ## Advanced
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ass info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+| 💥 [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ass info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
 
 
 # Notes
 
-> "These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how."
+> These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how.
 
 <details>
 <summary><span style="font-weight: bold;">Prompt</span></summary>

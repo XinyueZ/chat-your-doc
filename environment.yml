@@ -203,4 +203,5 @@ dependencies:
       - werkzeug==2.3.6
       - yarl==1.9.2
       - zipp==3.16.2
+      - bs4==0.0.1
 prefix: /Users/zxy/anaconda3/envs/machinelearning

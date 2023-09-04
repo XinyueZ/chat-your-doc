@@ -42,6 +42,17 @@ pip install -r requirements.txt
 ``` 
 ----
 
+# Storage
+
+
+ref: https://python.langchain.com/docs/modules/data_connection/vectorstores/
+
+Chroma, FAISS
+
+`pip install chromadb`
+
+`pip install faiss-cpu`
+
 # Lab Apps
 
 ## Simple

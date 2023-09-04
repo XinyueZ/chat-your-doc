@@ -13,9 +13,13 @@ class App:
 
     def __init__(self) -> None:
         self._chat = ChatOpenAI(model="gpt-4-0613")
+        sys_tmpl = """Summarize a text by identifying its keypoints. Each keypoint should be represented by:
+        keypoint: a sentence of the representation of the keypoint
+        keyword: one or two words that represent the keypoint
+        Answer only in the format of json that contains a list of keypoint objects."""
         self._chat_template = ChatPromptTemplate.from_messages(
             [
-                ("system", "You are reading a text and want to summarize it."),
+                ("system", sys_tmpl),
                 ("human", "Your text: {text}"),
             ]
         )
@@ -28,7 +32,9 @@ class App:
         return "\n".join(line for line in lines if line)
 
     def __call__(self):
-        st.write("# Load HTML, summarize the content")
+        st.write(
+            "# Load HTML, find keypoints, format in json (plain text)"
+        )
         url = st.text_input("URL", "https://arxiv.org/abs/2308.14963")
         if url:
             txt = self._get_html_text(url)
@@ -37,7 +43,7 @@ class App:
             msg = self._chat_template.format_messages(text=txt)
 
             res = self._chat(msg)
-            st.write(res.content)
+            st.code(res.content, language="json")
 
 
 if __name__ == "__main__":

@@ -63,22 +63,23 @@ Chroma, FAISS
 | [i-ask.sh](simple/i-ask.sh)  |OpenAI http-request| Simply ask & answer via OpenAI API | `i-ask.sh "Who is Joe Biden?"` | ![](assets/screens/i-ask.gif) | 
 | [chat_openai.py](simple/chat_openai.py)  |ChatOpenAI, LangChain | Just one chat session  | `streamlit run simple/chat_openai.py --server.port 8000 --server.enableCORS false` | ![](assets/screens/chat_openai.gif) | 
 | [open_api_llm_app.py](simple/open_api_llm_app.py)  |OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
-| [read_html_app.py](simple/read_html_app.py)  | CharacterTextSplitter | Get html content and chunk| `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
+| [read_html_app.py](simple/read_html_app.py)  | CharacterTextSplitter, LangChain | Get html content and chunk| `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
 
 ## Intermediate
 
 | App | Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| 💥 [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain| Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
-| [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain| Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
-| [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)  | ChatOpenAI | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
-| 💥 [html_2_json_app.py](intermediate/html_2_json_app.py)  | ChatOpenAI | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
+| 💥 [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain | Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain | Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
+| [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)  | ChatOpenAI, LangChain | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
+| 💥 [html_2_json_app.py](intermediate/html_2_json_app.py)  | ChatOpenAI, LangChain | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
 
 ## Advanced
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| 💥 [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ass info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+| 💥 [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+| 💥 [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
 
 
 # Notes

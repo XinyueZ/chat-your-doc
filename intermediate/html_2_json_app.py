@@ -15,7 +15,7 @@ class App:
         self._chat = ChatOpenAI(model="gpt-4-0613")
         sys_tmpl = """Summarize a text by identifying its keypoints. Each keypoint should be represented by:
         keypoint: a sentence of the representation of the keypoint
-        keyword: one or two words that represent the keypoint
+        keyword: at least three words that represent the keypoint
         Answer only in the format of json that contains a list of keypoint objects."""
         self._chat_template = ChatPromptTemplate.from_messages(
             [

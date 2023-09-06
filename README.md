@@ -64,6 +64,7 @@ Chroma, FAISS
 | [chat_openai.py](simple/chat_openai.py)  |ChatOpenAI, LangChain | Just one chat session  | `streamlit run simple/chat_openai.py --server.port 8000 --server.enableCORS false` | ![](assets/screens/chat_openai.gif) | 
 | [open_api_llm_app.py](simple/open_api_llm_app.py)  |OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
 | [read_html_app.py](simple/read_html_app.py)  | CharacterTextSplitter, LangChain | Get html content and chunk| `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
+| 💥 [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 
 ## Intermediate
 

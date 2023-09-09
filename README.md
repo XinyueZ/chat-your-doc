@@ -75,12 +75,13 @@ Chroma, FAISS
 | [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)  | ChatOpenAI, LangChain | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
 | 💥 [html_2_json_app.py](intermediate/html_2_json_app.py)  | ChatOpenAI, LangChain | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
 
-## Advanced
+## 💥 Advanced
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-| 💥 [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
-| 💥 [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+|  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | ResponseSchema, StructuredOutputParser, LangChain | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
 
 
 # Notes
@@ -118,9 +119,17 @@ Chroma, FAISS
     <td><img src="assets/notes/openai_moderation.png"></td>
     <td><img src="assets/notes/chain-of-thought-reasoning.png"></td>
     <td><img src="assets/notes/why_langchain_prompt_template.png"></td>
+  </tr>
+  <tr>
     <td><img src="assets/notes/memory.png"></td>
     <td><img src="assets/notes/memory_type_1.png"></td>
     <td><img src="assets/notes/memory_type_2.png"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/notes/seq_chain_1.png"></td>
+    <td><img src="assets/notes/seq_chain_2.png"></td>
+    <td><img src="assets/notes/seq_chain_3.png"></td>
+    <td><img src="assets/notes/seq_chain_4.png"></td>
   </tr>
 </table>
 </details>

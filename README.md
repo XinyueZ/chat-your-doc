@@ -84,12 +84,11 @@ Chroma, FAISS
 |  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | ResponseSchema, StructuredOutputParser, LangChain | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
 
 
-# Notes
-
-> These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how.
+# Notes 
 
 <details>
-<summary><span style="font-weight: bold;">Prompt</span></summary>
+<summary><span style="font-weight: bold;">These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how.
+</span></summary>
 <style>
   table {
     width: 100%;
@@ -130,6 +129,16 @@ Chroma, FAISS
     <td><img src="assets/notes/seq_chain_2.png"></td>
     <td><img src="assets/notes/seq_chain_3.png"></td>
     <td><img src="assets/notes/seq_chain_4.png"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/notes/llms_on_doc.png"></td>
+    <td><img src="assets/notes/embeddings.png"></td>
+    <td><img src="assets/notes/vec_db_1.png"></td>
+    <td><img src="assets/notes/vec_db_2.png"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/notes/stuff_method.png"></td>
+    <td><img src="assets/notes/map_reduce_refine_map_rerank.png"></td> 
   </tr>
 </table>
 </details>

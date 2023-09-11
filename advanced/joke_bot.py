@@ -4,9 +4,11 @@ from typing import Tuple
 
 from langchain.chat_models import ChatOpenAI
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from langchain.prompts.chat import (ChatPromptTemplate,
-                                    HumanMessagePromptTemplate,
-                                    SystemMessagePromptTemplate)
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from langchain.schema.messages import BaseMessage
 from loguru import logger
 
@@ -30,8 +32,10 @@ class PromptRepository:
 class JokeProviderRepository:
     _sys_template: SystemMessagePromptTemplate
     _user_template: HumanMessagePromptTemplate
-    _structured_output_parser: StructuredOutputParser
+    _chat_template: ChatPromptTemplate
     _prompt_repository: PromptRepository
+
+    _structured_output_parser: StructuredOutputParser
 
     def __init__(self, prompt_repository: PromptRepository) -> None:
         self._prompt_repository = prompt_repository
@@ -64,7 +68,7 @@ class JokeProviderRepository:
 
         structured_output = self._structured_output_parser.parse(jokes.content)
         list_output = structured_output["jokes"]
-        #logger.debug("Background jokes: {}", len(list_output))
+        # logger.debug("Background jokes: {}", len(list_output))
 
         return (jokes, list_output)
 
@@ -93,14 +97,16 @@ class JokeRatingRepository:
 
 class Bot:
     _num_of_jokes: int
+    _joke_repository: JokeProviderRepository
+    _rating_repository: JokeRatingRepository
 
     def __init__(self, num_of_jokes: int) -> None:
-        self._prompt_repository = PromptRepository()
+        prompt_repository = PromptRepository()
         self._joke_repository = JokeProviderRepository(
-            prompt_repository=self._prompt_repository
+            prompt_repository=prompt_repository
         )
         self._rating_repository = JokeRatingRepository(
-            prompt_repository=self._prompt_repository
+            prompt_repository=prompt_repository
         )
         self._num_of_jokes = num_of_jokes
 

@@ -97,7 +97,7 @@ class App:
     def _store_file(self) -> None:
         uploaded_pdf = st.file_uploader("Upload a PDF")
         if uploaded_pdf:
-            temp_file = f"./{uploaded_pdf.name}.pdf"
+            temp_file = f"./{uploaded_pdf.name}"
             with open(temp_file, "wb") as file:
                 file.write(uploaded_pdf.getvalue())
                 file_name = uploaded_pdf.name

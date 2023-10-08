@@ -11,6 +11,8 @@ Chat Your Doc is an experimental project aimed at exploring various applications
     - [Pip](#pip)  
 - [Storage](#storage) 
 - [Lab Apps](#lab-apps)
+  - [Popular solutions](#popular-solutions)
+    - [How to chat with a document via vector database?](#how-to-chat-with-a-document-via-vector-database)
   - [Simple](#simple)
   - [Intermediate](#intermediate)
   - [Advanced](#advanced)
@@ -55,6 +57,10 @@ Chroma, FAISS
 `pip install faiss-cpu`
 
 # Popular solutions 
+
+## How to chat with a document via vector database?
+
+[Chat with your PDF （Streamlit Demo)](https://teetracker.medium.com/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |

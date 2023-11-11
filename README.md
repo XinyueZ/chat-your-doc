@@ -57,7 +57,8 @@ Chroma, FAISS
 `pip install faiss-cpu`
 
 # Notebooks
-| App | Models & Components|Description |  Demo |
+
+| Notebook | Models & Components|Description |  Demo |
 | --- | --- |--- | --- |
 | [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | ChatOpenAI, LangChain, Whisper,  automatic-speech-recognition | Basic audio to text and summary | ![](assets/guide/audio2text2LLM.png)| 
 | [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 

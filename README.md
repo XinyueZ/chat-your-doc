@@ -10,9 +10,9 @@ Chat Your Doc is an experimental project aimed at exploring various applications
     - [Conda](#conda)
     - [Pip](#pip)  
 - [Storage](#storage) 
-- [Lab Apps](#lab-apps)
-  - [Popular solutions](#popular-solutions)
-    - [How to chat with a document via vector database?](#how-to-chat-with-a-document-via-vector-database)
+- [Notebooks](#notebooks)
+- [Popular solutions](#popular-solutions)
+  - [How to chat with a document via vector database?](#how-to-chat-with-a-document-via-vector-database)
   - [Simple](#simple)
   - [Intermediate](#intermediate)
   - [Advanced](#advanced)
@@ -56,6 +56,13 @@ Chroma, FAISS
 
 `pip install faiss-cpu`
 
+# Notebooks
+| App | Models & Components|Description |  Demo |
+| --- | --- |--- | --- |
+| [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | ChatOpenAI, LangChain, Whisper,  automatic-speech-recognition | Basic audio to text and summary | ![](assets/guide/audio2text2LLM.png)| 
+| [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
+
+
 # Popular solutions 
 
 ## How to chat with a document via vector database?
@@ -77,7 +84,6 @@ Chroma, FAISS
 | [open_api_llm_app.py](simple/open_api_llm_app.py)  |OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
 | [read_html_app.py](simple/read_html_app.py)  | CharacterTextSplitter, LangChain | Get html content and chunk| `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
 | 💥 [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
-| [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | ChatOpenAI, LangChain, Whisper,  automatic-speech-recognition | Basic audio to text and summary | a notebook| ![](assets/guide/audio2text2LLM.png)| 
 
 ## Intermediate
 
@@ -97,6 +103,7 @@ Chroma, FAISS
 |  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | ResponseSchema, StructuredOutputParser, LangChain | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
 |  [joke_bot.py](advanced/joke_bot.py)  | ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate ResponseSchema, StructuredOutputParser, ChatOpenAI, LangChain | Prompt engineering to get one random joke or rate one joke | `python advanced/joke_bot.py --rate "Why couldn't the bicycle stand up by itself? It was two tired."` or `python advanced/joke_bot.py --tell --num 4` | ![](assets/screens/joke_bot.gif) ![](assets/guide/joke_bot.png) | 
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | | 
+
 
 
 # Notes 

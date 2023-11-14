@@ -26,6 +26,8 @@ _ = load_dotenv(find_dotenv())
 
 # os.getenv('OPENAI_API_KEY')
 
+st.set_page_config(layout="wide")
+
 
 class ImageDescriber:
     def __init__(self, model_name: str, device: str) -> None:
@@ -77,10 +79,11 @@ class PromptGeneratorTool(BaseTool):
                 
                 {image_desc}
                 
-                List the objects, separating each with a comma. Use simple, fundamental names to describe each object. For instance, use 'tree' instead of 'Christmas tree', or 'girl' instead of 'a little girl'.
+                List the objects, separating each with a comma. 
                 """
             )
         ]
+        # Use simple, fundamental names to describe each object. For instance, use 'tree' instead of 'Christmas tree', or 'girl' instead of 'a little girl'.
         gen_prompt = self.llm(input_msg)
         logger.debug(f"Generated prompt: {gen_prompt}")
         return gen_prompt
@@ -195,15 +198,16 @@ class App:
             raise ValueError(f"Unknown msg type: {msg}")
 
     def _upload_image(self) -> None:
-        uploaded_image = st.file_uploader("Upload an image")
-        if uploaded_image:
-            temp_file_path = f"./{uploaded_image.name}"
-            with open(temp_file_path, "wb") as file:
-                file.write(uploaded_image.getvalue())
-                file_name = uploaded_image.name
-                logger.info(f"Uploaded {file_name}")
-            self._image_agents_handler(image_path=temp_file_path)
-            os.remove(temp_file_path)
+        with st.sidebar:
+            uploaded_image = st.file_uploader("Upload an image")
+            if uploaded_image:
+                temp_file_path = f"./{uploaded_image.name}"
+                with open(temp_file_path, "wb") as file:
+                    file.write(uploaded_image.getvalue())
+                    file_name = uploaded_image.name
+                    logger.debug(f"Uploaded {file_name}")
+                self._image_agents_handler(image_path=temp_file_path)
+                os.remove(temp_file_path)
 
     def _image_agents_handler(self, image_path: str) -> str:
         try:
@@ -218,19 +222,21 @@ class App:
             logger.error(e)
 
     def run(self) -> None:
-        st.title("Chat with Image")
+        st.title("Image Auto Annotation (auto object detection)")
+
+        self._upload_image()
+
         st.chat_message(name="ai").write(
             "Hey, I can describe an image you uploaded and more."
         )
-        self._upload_image()
 
         logger.debug(self._agent.memory.buffer)
         for idx, msg in enumerate(self._agent.memory.buffer[::-1]):
             if isinstance(msg, AIMessage):
                 img_desc_path = msg.content.split(";")
                 img_desc, img_path = img_desc_path[0].strip(), img_desc_path[1].strip()
-                st.image(img_path)
                 st.chat_message(name=self._abbr(msg)).write(img_desc)
+                st.image(img_path)
 
 
 if __name__ == "__main__":

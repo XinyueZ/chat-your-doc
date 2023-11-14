@@ -15,16 +15,17 @@ from langchain.memory import ConversationBufferMemory
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.messages import AIMessage, HumanMessage
-from langchain.schema.output_parser import StrOutputParser
 from langchain.tools import BaseTool
 from loguru import logger
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
+import sys
 
 _ = load_dotenv(find_dotenv())
-
-
 # os.getenv('OPENAI_API_KEY')
+
+logger.remove()
+logger.add(sys.stderr, level="INFO")
 
 st.set_page_config(layout="wide")
 

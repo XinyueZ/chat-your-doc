@@ -4,3 +4,4 @@ db/
 /cfgs
 __pycache__
 /output
+/tmp

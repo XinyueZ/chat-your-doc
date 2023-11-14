@@ -112,21 +112,20 @@ class ObjectDetectionTool(BaseTool):
             False,
             image=image_np,
             caption=prompt,
-            box_threshold=0.35,
-            text_threshold=0.25,
+            box_threshold=st.session_state["box_threshold"],
+            text_threshold=st.session_state["text_threshold"],
         )
 
-        if len(detections.xyxy) == 0:
-            return image_path
-
-        logger.debug(f"detections: {detections}, labels: {labels}")
-        box_annotator = sv.BoxAnnotator()
-        image_det_np = box_annotator.annotate(
-            scene=image_np,
-            detections=detections,
-            skip_label=False,
-            labels=labels,
-        )
+        image_det_np = image_np
+        if len(detections.xyxy) > 0:
+            logger.debug(f"detections: {detections}, labels: {labels}")
+            box_annotator = sv.BoxAnnotator()
+            image_det_np = box_annotator.annotate(
+                scene=image_np,
+                detections=detections,
+                skip_label=False,
+                labels=labels,
+            )
         output_dir = "output/"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -158,7 +157,9 @@ class App:
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 tools=[
                     ImageDescriberTool(),
-                    ObjectDetectionTool().setup(groundingDINO_model),
+                    ObjectDetectionTool().setup(
+                        groundingDINO_model=groundingDINO_model
+                    ),
                     PromptGeneratorTool().setup(llm),
                 ],
                 # return_intermediate_steps=True,
@@ -170,7 +171,6 @@ class App:
                     memory_key="chat_history",
                     # input_key="input",
                     # output_key="output",
-                    k=2,
                     return_messages=True,  # then buffer === buffer_as_messages (a list) instead pure str returning
                 ),
             )
@@ -202,13 +202,16 @@ class App:
         with st.sidebar:
             uploaded_image = st.file_uploader("Upload an image")
             if uploaded_image:
-                temp_file_path = f"./{uploaded_image.name}"
+                tmp_dir = "tmp/"
+                if not os.path.exists(tmp_dir):
+                    os.makedirs(tmp_dir)
+                temp_file_path = os.path.join(tmp_dir, f"{uploaded_image.name}")
                 with open(temp_file_path, "wb") as file:
                     file.write(uploaded_image.getvalue())
                     file_name = uploaded_image.name
                     logger.debug(f"Uploaded {file_name}")
                 self._image_agents_handler(image_path=temp_file_path)
-                os.remove(temp_file_path)
+                # os.remove(temp_file_path)
 
     def _image_agents_handler(self, image_path: str) -> str:
         try:
@@ -226,6 +229,21 @@ class App:
         st.title("Image Auto Annotation (auto object detection)")
 
         self._upload_image()
+
+        box_threshold: float = st.sidebar.slider(
+            "Box threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.35,
+            key="box_threshold",
+        )
+        text_threshold: float = st.sidebar.slider(
+            "Text threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.25,
+            key="text_threshold",
+        )
 
         st.chat_message(name="ai").write(
             "Hey, I can describe an image you uploaded and more."

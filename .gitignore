@@ -1,2 +1,6 @@
 db/
 .DS_Store
+/models
+/cfgs
+__pycache__
+/output

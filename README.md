@@ -75,6 +75,7 @@ Chroma, FAISS
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | | 
 |  [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 |  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [chat_ur_image.py](advanced/chat_ur_image.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor | Chat with image freely | `streamlit run advanced/chat_ur_image.py --server.port 8006 --server.enableCORS false` | | 
 
 ## Simple
 

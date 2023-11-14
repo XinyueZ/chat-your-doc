@@ -132,7 +132,7 @@ class ObjectDetectionTool(BaseTool):
         now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
         output_img_path = os.path.join(output_dir, f"{now_time}.png")
         image = Image.fromarray(image_det_np)
-        image.save(output_img_path)
+        image.save(output_img_path, format="PNG", optimize=True, quality=70)
         return output_img_path
 
     def _arun(self, query: str):
@@ -164,7 +164,7 @@ class App:
                 ],
                 # return_intermediate_steps=True,
                 llm=llm,
-                verbose=True,
+                verbose=False,
                 max_iterations=3,
                 early_stopping_method="generate",
                 memory=ConversationBufferMemory(
@@ -255,7 +255,7 @@ class App:
                 img_desc_path = msg.content.split(";")
                 img_desc, img_path = img_desc_path[0].strip(), img_desc_path[1].strip()
                 st.chat_message(name=self._abbr(msg)).write(img_desc)
-                st.image(img_path)
+                st.image(img_path, width=600)
 
 
 if __name__ == "__main__":

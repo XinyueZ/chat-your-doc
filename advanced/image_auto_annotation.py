@@ -212,6 +212,7 @@ class App:
                     file.write(uploaded_image.getvalue())
                     file_name = uploaded_image.name
                     logger.debug(f"Uploaded {file_name}")
+                st.sidebar.image(temp_file_path, width=200)
                 self._image_agents_handler(image_path=temp_file_path)
                 # os.remove(temp_file_path)
 

@@ -73,10 +73,10 @@ Chroma, FAISS
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
-|  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | | 
+|  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | [read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3) | 
 |  [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 |  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
-|  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | | 
+|  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` |  ![](assets/screens/image_auto_annotation.gif)  | 
 
 ## Simple
 
@@ -105,7 +105,8 @@ Chroma, FAISS
 |  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
 |  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | ResponseSchema, StructuredOutputParser, LangChain | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
 |  [joke_bot.py](advanced/joke_bot.py)  | ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate ResponseSchema, StructuredOutputParser, ChatOpenAI, LangChain | Prompt engineering to get one random joke or rate one joke | `python advanced/joke_bot.py --rate "Why couldn't the bicycle stand up by itself? It was two tired."` or `python advanced/joke_bot.py --tell --num 4` | ![](assets/screens/joke_bot.gif) ![](assets/guide/joke_bot.png) | 
-|  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | | 
+|  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3) | 
+|  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/image_auto_annotation.gif)  | 
 
 
 

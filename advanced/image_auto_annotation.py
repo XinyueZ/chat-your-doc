@@ -50,13 +50,14 @@ class ImageDescriberTool(BaseTool):
     name = "Describe image tool"
     description = "Use this tool to describe found objects an image"
 
+    image_describer: Optional[ImageDescriber] = None
+
+    def setup(self, image_describer: ImageDescriber) -> BaseTool:
+        self.image_describer = image_describer
+        return self
+
     def _run(self, image_path: str) -> str:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        image_describer = ImageDescriber(
-            "Salesforce/blip-image-captioning-base",
-            device,
-        )
-        return image_describer(image_path)
+        return self.image_describer(image_path)
 
     def _arun(self, query: str):
         raise NotImplementedError
@@ -148,6 +149,14 @@ class App:
             box_threshold=st.session_state.get("box_threshold", 0.35),
             text_threshold=st.session_state.get("text_threshold", 0.25),
         )
+        image_describer = ImageDescriber(
+            st.session_state.get(
+                "blip-image-captioning",
+                "Salesforce/blip-image-captioning-base",
+            ),  # "Salesforce/blip-image-captioning-base", "Salesforce/blip-image-captioning-large"
+            device,
+        )
+
         if "agent" not in st.session_state:
             llm = (
                 ChatOpenAI(model="gpt-4-1106-preview", temperature=0)
@@ -158,7 +167,7 @@ class App:
             self._agent = initialize_agent(
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 tools=[
-                    ImageDescriberTool(),
+                    ImageDescriberTool().setup(image_describer=image_describer),
                     ObjectDetectionTool().setup(
                         groundingDINO_model=groundingDINO_model
                     ),
@@ -233,6 +242,20 @@ class App:
 
         self._upload_image()
 
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("## blip-image-captioning for image describing")
+        st.sidebar.radio(
+            "Select a model",
+            (
+                "Salesforce/blip-image-captioning-base",
+                "Salesforce/blip-image-captioning-large",
+            ),
+            index=0,
+            key="blip-image-captioning",
+        )
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("## GroundingDINO for object detection")
         st.sidebar.slider(
             "Box threshold",
             min_value=0.0,
@@ -247,8 +270,6 @@ class App:
             value=0.25,
             key="text_threshold",
         )
-
-        # add radio buttons group
         st.sidebar.radio(
             "Select a model",
             ("swint_ogc", "swinb_cogcoor"),

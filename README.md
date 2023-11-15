@@ -62,6 +62,7 @@ Chroma, FAISS
 | --- | --- |--- | --- |
 | [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | ChatOpenAI, LangChain, Whisper,  automatic-speech-recognition | Basic audio to text and summary | ![](assets/guide/audio2text2LLM.png)| 
 | [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
+| [image_description.ipynb](notebooks/image_description.ipynb)  | [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description | | 
 
 
 # Popular solutions 

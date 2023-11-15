@@ -99,9 +99,13 @@ class ObjectDetectionTool(BaseTool):
     description = "Use this tool to perform an object detection model on an image (read an image path) to detect object with a text prompt"
 
     groundingDINO_model: Optional[GroundingDINOModel] = None
+    output_quality: int = 70
 
-    def setup(self, groundingDINO_model: GroundingDINOModel) -> BaseTool:
+    def setup(
+        self, groundingDINO_model: GroundingDINOModel, output_quality=70
+    ) -> BaseTool:
         self.groundingDINO_model = groundingDINO_model
+        self.output_quality = output_quality
         return self
 
     def _run(self, image_path: str, prompt: str) -> str:
@@ -129,7 +133,9 @@ class ObjectDetectionTool(BaseTool):
         now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
         output_img_path = os.path.join(output_dir, f"{now_time}.png")
         image = Image.fromarray(image_det_np)
-        image.save(output_img_path, format="PNG", optimize=True, quality=70)
+        image.save(
+            output_img_path, format="PNG", optimize=True, quality=self.output_quality
+        )
         return output_img_path
 
     def _arun(self, query: str):
@@ -140,7 +146,7 @@ class App:
     _agent: AgentExecutor
 
     def __init__(self, device) -> None:
-        groundingDINO_model = GroundingDINOModel.create_instance(
+        self.groundingDINO_model = GroundingDINOModel.create_instance(
             device=device,
             groundingDINO_type=st.session_state.get(
                 "groundingDINO_model", "swint_ogc"
@@ -149,13 +155,15 @@ class App:
             box_threshold=st.session_state.get("box_threshold", 0.35),
             text_threshold=st.session_state.get("text_threshold", 0.25),
         )
-        image_describer = ImageDescriber(
+        self.image_describer = ImageDescriber(
             st.session_state.get(
                 "blip-image-captioning",
                 "Salesforce/blip-image-captioning-base",
             ),  # "Salesforce/blip-image-captioning-base", "Salesforce/blip-image-captioning-large"
             device,
         )
+
+        self.output_quality = st.session_state.get("output_quality", 70)
 
         if "agent" not in st.session_state:
             llm = (
@@ -167,9 +175,10 @@ class App:
             self._agent = initialize_agent(
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 tools=[
-                    ImageDescriberTool().setup(image_describer=image_describer),
+                    ImageDescriberTool().setup(image_describer=self.image_describer),
                     ObjectDetectionTool().setup(
-                        groundingDINO_model=groundingDINO_model
+                        groundingDINO_model=self.groundingDINO_model,
+                        output_quality=self.output_quality,
                     ),
                     PromptGeneratorTool().setup(llm),
                 ],
@@ -275,6 +284,16 @@ class App:
             ("swint_ogc", "swinb_cogcoor"),
             index=0,
             key="groundingDINO_model",
+        )
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("## Output")
+        st.sidebar.slider(
+            "Image quality",
+            min_value=0,
+            max_value=100,
+            value=70,
+            key="output_quality",
         )
 
         st.chat_message(name="ai").write(

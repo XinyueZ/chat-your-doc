@@ -110,9 +110,7 @@ class ObjectDetectionTool(BaseTool):
         image_np = np.array(image)
 
         detections, labels = self.groundingDINO_model(
-            False,
-            image=image_np,
-            caption=prompt
+            False, image=image_np, caption=prompt
         )
 
         image_det_np = image_np

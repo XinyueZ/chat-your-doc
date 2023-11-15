@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from typing import Optional
 
@@ -6,7 +7,6 @@ import numpy as np
 import streamlit as st
 import supervision as sv
 import torch
-from traitlets import default
 from api.grounding_dino_model import GroundingDINOModel
 from dotenv import find_dotenv, load_dotenv
 from langchain.agents import initialize_agent
@@ -20,7 +20,6 @@ from langchain.tools import BaseTool
 from loguru import logger
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
-import sys
 
 _ = load_dotenv(find_dotenv())
 # os.getenv('OPENAI_API_KEY')
@@ -167,7 +166,7 @@ class App:
                 ],
                 # return_intermediate_steps=True,
                 llm=llm,
-                verbose=False,
+                verbose=True,
                 max_iterations=3,
                 early_stopping_method="generate",
                 memory=ConversationBufferMemory(

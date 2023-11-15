@@ -6,6 +6,7 @@ import numpy as np
 import streamlit as st
 import supervision as sv
 import torch
+from traitlets import default
 from api.grounding_dino_model import GroundingDINOModel
 from dotenv import find_dotenv, load_dotenv
 from langchain.agents import initialize_agent
@@ -111,9 +112,7 @@ class ObjectDetectionTool(BaseTool):
         detections, labels = self.groundingDINO_model(
             False,
             image=image_np,
-            caption=prompt,
-            box_threshold=st.session_state["box_threshold"],
-            text_threshold=st.session_state["text_threshold"],
+            caption=prompt
         )
 
         image_det_np = image_np
@@ -143,6 +142,15 @@ class App:
     _agent: AgentExecutor
 
     def __init__(self, device) -> None:
+        groundingDINO_model = GroundingDINOModel.create_instance(
+            device=device,
+            groundingDINO_type=st.session_state.get(
+                "groundingDINO_model", "swint_ogc"
+            ),  # "swint_ogc",  # swinb_cogcoor
+        ).setup(
+            box_threshold=st.session_state.get("box_threshold", 0.35),
+            text_threshold=st.session_state.get("text_threshold", 0.25),
+        )
         if "agent" not in st.session_state:
             llm = (
                 ChatOpenAI(model="gpt-4-1106-preview", temperature=0)
@@ -150,9 +158,6 @@ class App:
                 else st.session_state["llm"]
             )
             logger.debug("Creating new agent")
-            groundingDINO_model = GroundingDINOModel.create_instance(
-                device=device, groundingDINO_type="swint_ogc"
-            ).setup()
             self._agent = initialize_agent(
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 tools=[
@@ -174,10 +179,10 @@ class App:
                     return_messages=True,  # then buffer === buffer_as_messages (a list) instead pure str returning
                 ),
             )
-            st.session_state["image_agent"] = self._agent
+            st.session_state["agent"] = self._agent
         else:
             logger.debug("Loading existing agent")
-            self._agent = st.session_state["image_agent"]
+            self._agent = st.session_state["agent"]
 
         # self._structured_output_parser = StructuredOutputParser.from_response_schemas(
         #     [
@@ -230,19 +235,27 @@ class App:
 
         self._upload_image()
 
-        box_threshold: float = st.sidebar.slider(
+        st.sidebar.slider(
             "Box threshold",
             min_value=0.0,
             max_value=1.0,
             value=0.35,
             key="box_threshold",
         )
-        text_threshold: float = st.sidebar.slider(
+        st.sidebar.slider(
             "Text threshold",
             min_value=0.0,
             max_value=1.0,
             value=0.25,
             key="text_threshold",
+        )
+
+        # add radio buttons group
+        st.sidebar.radio(
+            "Select a model",
+            ("swint_ogc", "swinb_cogcoor"),
+            index=0,
+            key="groundingDINO_model",
         )
 
         st.chat_message(name="ai").write(
@@ -255,7 +268,7 @@ class App:
                 img_desc_path = msg.content.split(";")
                 img_desc, img_path = img_desc_path[0].strip(), img_desc_path[1].strip()
                 st.chat_message(name=self._abbr(msg)).write(img_desc)
-                st.image(img_path, width=600)
+                st.image(img_path, width=612)
 
 
 if __name__ == "__main__":

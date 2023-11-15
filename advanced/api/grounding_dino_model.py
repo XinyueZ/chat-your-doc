@@ -5,13 +5,16 @@ from rich import print
 
 
 class GroundingDINOModel:
+    box_threshold: float = 0.35
+    text_threshold: float = 0.25
+
     def __init__(self, cfg_url, download_url, name, device):
         self.cfg_url = cfg_url
         self.download_url = download_url
         self.name = name
         self.device = device
 
-    def setup(self):
+    def setup(self, box_threshold: float = 0.35, text_threshold: float = 0.25):
         os.system(f"wget -nc  -P cfgs {self.cfg_url}")
         os.system(f"wget -nc  -P models  {self.download_url}")
 
@@ -20,11 +23,18 @@ class GroundingDINOModel:
             f"./models/{self.download_url.split('/')[-1]}",
             device=self.device,
         )
-        print(f"GroundingDINO model loaded, type: {self.name}")
+
+        self.box_threshold = box_threshold
+        self.text_threshold = text_threshold
+        print(
+            f"GroundingDINO model loaded, type: {self.name}, device: {self.device}, box_threshold: {self.box_threshold}, text_threshold: {self.text_threshold}"
+        )
 
         return self
 
     def __call__(self, for_classes, **kwargs):
+        kwargs["box_threshold"] = self.box_threshold
+        kwargs["text_threshold"] = self.text_threshold
         if for_classes:
             return self.gddino.predict_with_classes(**kwargs)
         else:

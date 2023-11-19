@@ -1,4 +1,4 @@
-from cv2 import exp
+import os, sys
 import streamlit as st
 from langchain.agents.openai_assistant.base import OpenAIAssistantRunnable, OutputType
 from langchain.chat_models import ChatOpenAI
@@ -79,6 +79,21 @@ class App:
         outputs = assis.invoke({"content": inputs})
         logger.debug(outputs)
         return outputs, structured_output_parser
+
+    def _upload_doc(self) -> None:
+        with st.sidebar:
+            uploaded_doc = st.file_uploader("Upload document")
+            if uploaded_doc:
+                tmp_dir = "tmp/"
+                if not os.path.exists(tmp_dir):
+                    os.makedirs(tmp_dir)
+                temp_file_path = os.path.join(tmp_dir, f"{uploaded_doc.name}")
+                with open(temp_file_path, "wb") as file:
+                    file.write(uploaded_doc.getvalue())
+                    file_name = uploaded_doc.name
+                    logger.debug(f"Uploaded {file_name}")
+
+                # os.remove(temp_file_path)
 
 
 if __name__ == "__main__":

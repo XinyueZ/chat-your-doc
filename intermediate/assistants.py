@@ -1,11 +1,10 @@
 import os
 
 import streamlit as st
-from langchain.agents.openai_assistant.base import OpenAIAssistantRunnable, OutputType
-from langchain.chat_models import ChatOpenAI
-from loguru import logger
+from langchain.agents.openai_assistant.base import (OpenAIAssistantRunnable,
+                                                    OutputType)
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-
+from loguru import logger
 from openai import OpenAI
 from openai.types import FileObject
 

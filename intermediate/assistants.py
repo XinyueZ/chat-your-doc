@@ -1,14 +1,49 @@
+import http.client
+import json
 import os
+import sys
 
 import streamlit as st
-from langchain.agents.openai_assistant.base import (OpenAIAssistantRunnable,
-                                                    OutputType)
+from langchain.agents.openai_assistant.base import OpenAIAssistantRunnable, OutputType
+from langchain.chains import LLMChain
+from langchain.chat_models import ChatOpenAI
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from loguru import logger
 from openai import OpenAI
 from openai.types import FileObject
 
+logger.remove()
+logger.add(sys.stderr, level="INFO")
+
 st.set_page_config(layout="wide")
+
+
+class DeTranslator:
+    def __init__(self) -> None:
+        self.sys_msg_tmpl = SystemMessagePromptTemplate.from_template(
+            "You're a machine language translator. You can translate text of any language into German."
+        )
+        self.human_msg_tmpl = HumanMessagePromptTemplate.from_template(
+            "Translate this sentence: {sentence}"
+        )
+
+        self.chat_prompt = ChatPromptTemplate.from_messages(
+            [self.sys_msg_tmpl, self.human_msg_tmpl]
+        )
+
+        self.llm_chain = LLMChain(llm=ChatOpenAI(), prompt=self.chat_prompt)
+
+    def __call__(self, text: str = None):
+        res = self.llm_chain.run(
+            sentence=text,
+        )
+        logger.debug("Translated: " + res)
+        return res
 
 
 class App:
@@ -66,6 +101,24 @@ class App:
                 )
                 if outputs != None:
                     st.write(outputs)
+        elif approach == "REST":
+            st.write("# Print assistant")
+            inputs = st.text_input("Print(Press Enter)", placeholder="Hello,world")
+            if inputs != None and inputs != "":
+                instructions = """As an assistant to translate any text into German langauge and print out."""
+                outputs: tuple[str, str] | None = self._do_in_rest(
+                    openai_api_key,
+                    inputs,
+                    instructions,
+                    model_name,
+                )
+                if outputs != None:
+                    result, run_res = outputs[0], outputs[1]
+                    st.write(result)
+                    st.write("---")
+                    st.write(run_res)
+        else:
+            pass
 
     def _langchain_outputs(
         self,
@@ -189,7 +242,226 @@ class App:
         )
         return uploaded_file
 
+    def _get(self, key: str, host: str, url: str):
+        conn = http.client.HTTPSConnection(host)
+        headers = {
+            "Content-Type": "application/json",
+            "OpenAI-Beta": "assistants=v1",
+        }
+        auth_header = f"Bearer {key}"
+        headers["Authorization"] = auth_header
+        conn.request("GET", url, None, headers)
+        res = conn.getresponse()
+
+        logger.debug(f"Status: {res.status}")
+        logger.debug(type(res))
+        logger.debug(f"Header: {res.headers}")
+        logger.debug(f"Response: {res}")
+        res_content = res.read().decode("utf-8").strip("\ufeff")
+        logger.debug(f"Response: {res_content}")
+
+        reply = json.loads(res_content, strict=False)
+        conn.close()
+        return reply
+
+    def _post(self, key: str, host: str, url: str, data: str):
+        # cmd = [
+        #     "curl",
+        #     api,
+        #     f"-u:{key}",
+        #     '-H "Content-Type: application/json"',
+        #     '-H "OpenAI-Beta: assistants=v1"',
+        #     f"-d '{data}'",
+        # ]
+
+        # logger.debug(cmd)
+        # result = subprocess.check_output(" ".join(cmd))
+        # result = os.system(" ".join(cmd))
+        # result = run(" ".join(cmd), stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        # logger.debug(result)
+
+        conn = http.client.HTTPSConnection(host)
+        headers = {
+            "Content-Type": "application/json",
+            "OpenAI-Beta": "assistants=v1",
+        }
+        payload = data
+        auth_header = f"Bearer {key}"
+        headers["Authorization"] = auth_header
+        conn.request("POST", url, payload, headers)
+        res = conn.getresponse()
+
+        logger.debug(f"Status: {res.status}")
+        logger.debug(type(res))
+        logger.debug(f"Header: {res.headers}")
+        logger.debug(f"Response: {res}")
+        res_content = res.read().decode("utf-8").strip("\ufeff")
+        logger.debug(f"Response: {res_content}")
+
+        reply = json.loads(res_content, strict=False)
+        conn.close()
+        return reply
+
+    def _do_in_rest(
+        self,
+        key: str,
+        inputs: str,
+        instructions: str,
+        model_name: str,
+    ) -> tuple[str, str] | None:
+        translator_def = """"function": {
+            "name": "translate_to_de_string",
+            "description": "Use this function to translate a string into German",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "string": {
+                        "type": "string",
+                        "description": "Any string input by user to translate"
+                    }
+                },
+                "required": ["string"]
+            }
+        }"""
+        print_func_def = """"function": {
+            "name": "print_string",
+            "description": "Use this function to print any string performed by translate_to_de_string",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "string": {
+                        "type": "string",
+                        "description": "Any string input by user to print"
+                    }
+                },
+                "required": ["string"]
+            }
+        }"""
+
+        assis_create = (
+            "{\n"
+            '    "name": "Print Assistant",\n'
+            '    "model": "' + model_name + '",\n'
+            '    "instructions": "' + instructions + '",\n'
+            '    "tools": [\n'
+            "        {\n"
+            '            "type": "function",\n'
+            f"            {translator_def} \n"
+            "        },\n"
+            "        {\n"
+            '            "type": "function",\n'
+            f"            {print_func_def} \n"
+            "        }\n"
+            "    ]\n"
+            "}"
+        )
+        assis_res = self._post(
+            key,
+            "api.openai.com",
+            "/v1/assistants",
+            assis_create,
+        )
+        logger.debug(assis_res)
+        assis_id = assis_res["id"]
+
+        thread_create = ""
+        thread_res = self._post(
+            key,
+            "api.openai.com",
+            "/v1/threads",
+            thread_create,
+        )
+        logger.debug(thread_res)
+        thread_id = thread_res["id"]
+
+        content = '"' + inputs.strip() + '"'
+        message_create = '{"role": "user", "content":' + content + "}"
+        message_res = self._post(
+            key,
+            "api.openai.com",
+            f"/v1/threads/{thread_id}/messages",
+            message_create,
+        )
+        logger.debug(message_res)
+        # Warning, message must be created before a "run" is activated.
+
+        run_create = '{"assistant_id": "' + assis_id + '"}'
+        run_res = self._post(
+            key,
+            "api.openai.com",
+            f"/v1/threads/{thread_id}/runs",
+            run_create,
+        )
+        logger.debug(run_res)
+        run_id = run_res["id"]
+        run_status = run_res["status"]
+
+        try:
+            result = None
+            while True:
+                logger.debug("🏃‍♂️ Run status: " + run_status)
+                run_res = self._get(
+                    key,
+                    "api.openai.com",
+                    f"/v1/threads/{thread_id}/runs/{run_id}",
+                )
+                run_status = run_res["status"]
+                if run_status == "completed":
+                    break
+                elif run_status == "requires_action":
+                    logger.debug("🏃‍♂️ Run status: " + run_status)
+
+                    required_action = run_res["required_action"]
+                    required_action_type = required_action["type"]
+                    if required_action_type != "submit_tool_outputs":
+                        continue
+                    submit_tool_outputs = required_action["submit_tool_outputs"]
+                    tool_calls = submit_tool_outputs["tool_calls"]
+                    tool_call_func = tool_calls[0]["function"]
+                    func_name = tool_call_func["name"]
+                    arguments = tool_call_func["arguments"]
+                    result = json.loads(arguments)["string"]
+
+                    tool_call_id = tool_calls[0]["id"]
+                    logger.debug(f"Tool call id: {tool_call_id}")
+
+                    if func_name == "translate_to_de_string":
+                        de_translator = DeTranslator()
+                        result = de_translator(result)
+                    elif func_name == "print_string":
+                        result = f"{result}"
+
+                    submit_tool_output = (
+                        '{"tool_call_id":'
+                        + '"'
+                        + tool_call_id
+                        + '",'
+                        + '"output":'
+                        + '"'
+                        + result
+                        + '"}'
+                    )
+
+                    submit_tool_outputs: str = (
+                        '{"tool_outputs":[' + submit_tool_output + "]}"
+                    )
+                    # Important, otherwise there is server-error 400 while POST.
+                    submit_tool_outputs = submit_tool_outputs.encode()
+
+                    logger.debug(submit_tool_outputs)
+
+                    submit_res = self._post(
+                        key,
+                        "api.openai.com",
+                        f"/v1/threads/{thread_id}/runs/{run_id}/submit_tool_outputs",
+                        submit_tool_outputs,
+                    )
+                    logger.debug(submit_res)
+            return result, run_res
+        except Exception as e:
+            logger.error(e)
+            return None
+
 
 if __name__ == "__main__":
-    app = App()
-    app()
+    App()()

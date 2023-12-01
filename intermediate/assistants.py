@@ -429,6 +429,8 @@ class App:
                         de_translator = DeTranslator()
                         result = de_translator(result)
                     elif func_name == "print_string":
+                        # We don't need to really print, just assign the 
+                        # result and return to outside.
                         result = f"{result}"
 
                     submit_tool_output = (

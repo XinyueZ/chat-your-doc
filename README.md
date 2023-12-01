@@ -67,12 +67,17 @@ Chroma, FAISS
 
 [LLM, LangChain Agent, Computer Vision](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) 
 
+## OpenAI Assistants, awesome, it manages a lot of things for you
+
+[How to Use OpenAI Assistants (API)](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0)
+
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | [read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3) ![](assets/notes/chat-doc-flow.jpeg) | 
 |  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e)  ![](assets/screens/image_auto_annotation.gif)  | 
 |  [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 |  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain, OpenAI SDK | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
 
 ## Simple
 
@@ -93,7 +98,7 @@ Chroma, FAISS
 | [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain | Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
 | [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)  | ChatOpenAI, LangChain | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
 | 💥 [html_2_json_app.py](intermediate/html_2_json_app.py)  | ChatOpenAI, LangChain | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
-| 💥 [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/assistants.gif)  | 
+| [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain, OpenAI SDK | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
 
 ## 💥 Advanced
 

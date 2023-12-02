@@ -5,3 +5,5 @@ db/
 __pycache__
 /output
 /tmp
+simple/wine-price-app/packages/csv-agent/wine_data/*.faiss
+simple/wine-price-app/packages/csv-agent/wine_data/*.pkl

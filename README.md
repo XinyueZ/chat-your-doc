@@ -59,6 +59,10 @@ Chroma, FAISS
 
 # Popular solutions 
 
+## Boilerplate codes of tokenization in LLM project, take away codes.
+
+[LLM fine-tuning step: Tokenizing](https://medium.com/@teetracker/llm-fine-tuning-step-tokenizing-caebb280cfc2)
+
 ## How to chat with a document via vector database?
 
 [Chat with your PDF （Streamlit Demo)](https://teetracker.medium.com/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)

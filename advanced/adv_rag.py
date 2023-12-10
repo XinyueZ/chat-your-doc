@@ -239,7 +239,7 @@ class App:
         st.sidebar.checkbox("Infer table structure", True, key="infer_table_structure")
         st.sidebar.checkbox("Extract images in PDF", key="extract_images_in_pdf")
 
-        if filepath != None:
+        if filepath is not None:
             st.sidebar.info(
                 "For None-GPU machine it'll take longer time to extract PDF."
             )
@@ -275,7 +275,11 @@ class App:
                     st.write(doc_summaries.table_doc_summaries)
 
         query = st.text_input("Query")
-        if query != None and len(query.strip()) > 0 and "retriever" in st.session_state:
+        if (
+            query is not None
+            and len(query.strip()) > 0
+            and "retriever" in st.session_state
+        ):
             logger.debug(f"Query: {query}")
             retriever = st.session_state["retriever"]
             st.write(QueryChain(retriever).invoke(query.strip()))

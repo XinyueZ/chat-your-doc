@@ -44,8 +44,8 @@ dependencies:
       - chardet==5.2.0
       - charset-normalizer==2.0.12
       - chroma==0.2.0
-      - chroma-hnswlib==0.7.2
-      - chromadb==0.4.8
+      - chroma-hnswlib==0.7.1
+      - chromadb==0.4.3
       - click==8.1.7
       - colorama==0.4.6
       - coloredlogs==15.0.1

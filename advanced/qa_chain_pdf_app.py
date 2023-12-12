@@ -5,7 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 from langchain.chains.question_answering import load_qa_chain
 from langchain.document_loaders import PyPDFLoader, UnstructuredPDFLoader
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from loguru import logger
@@ -20,7 +20,7 @@ class App:
         self.persist_directory = "db"
         self.embeddings = OpenAIEmbeddings()
 
-        self.llm = OpenAI(temperature=0.5)
+        self.llm = ChatOpenAI(temperature=0, model="gpt-4-1106-preview")
         self.qa_chain = load_qa_chain(self.llm, chain_type="stuff")
 
         self.lang_list = [

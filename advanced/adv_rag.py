@@ -204,7 +204,7 @@ class App:
             max_characters=4000,
             new_after_n_chars=3800,
             combine_text_under_n_chars=2000,
-            image_output_dir_path=".",
+            image_output_dir_path="./tmp",
         )
         return raw_pdf_elements
 
@@ -233,11 +233,11 @@ class App:
         st.write(
             f"Data source: [Baidu Inc. 2023 Q3 Financial Reports](https://ir.baidu.com/static-files/f4006310-1a98-4d86-89a1-edfea1ef5d0e)"
         )
+        st.write(
+            f"Data source: [Tesla Investor Shareholder Reports](https://ir.tesla.com/#quarterly-disclosure)"
+        )
         filepath = self._upload_doc()
         logger.debug(f"Loaded Filepath: {filepath}")
-
-        st.sidebar.checkbox("Infer table structure", True, key="infer_table_structure")
-        st.sidebar.checkbox("Extract images in PDF", key="extract_images_in_pdf")
 
         if filepath is not None:
             st.sidebar.info(
@@ -247,8 +247,8 @@ class App:
             element_list = (
                 self._read_pdf(
                     filepath=filepath,
-                    extract_images_in_pdf=st.session_state["extract_images_in_pdf"],
-                    infer_table_structure=st.session_state["infer_table_structure"],
+                    extract_images_in_pdf=True,
+                    infer_table_structure=True,
                 )
                 if "element_list" not in st.session_state
                 else st.session_state["element_list"]

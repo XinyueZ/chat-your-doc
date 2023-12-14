@@ -75,6 +75,9 @@ Chroma, FAISS
 
 [How to Use OpenAI Assistants (API)](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0)
 
+## Advanced RAG approaches, learn details how RAG works.
+[Advanced RAG](https://medium.com/@teetracker/advanced-rag-228510e7ac77)
+
 ## LangChain App Template Example
 
 [Experience with the LangChain App Template](https://teetracker.medium.com/experience-with-the-langchain-app-template-349fb47161c1)
@@ -83,13 +86,16 @@ Chroma, FAISS
 
 > Full instructions for creating a LangChain App Template can be found here: [LangChain App Template](https://python.langchain.com/docs/guides/deployments/template_repos)
 
+
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` | [read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3) ![](assets/notes/chat-doc-flow.jpeg) | 
 |  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e)  ![](assets/screens/image_auto_annotation.gif)  | 
 |  [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 |  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |ChatOpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
 |  [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain, OpenAI SDK | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/guide/OpenAI_Assistant_Chat_And_Completions.jpeg) ![](assets/guide/OpenAI_Assistant_Function_And_Tool.jpeg) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
+|  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
 
 ## Simple
 
@@ -122,6 +128,7 @@ Chroma, FAISS
 |  [joke_bot.py](advanced/joke_bot.py)  | ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate ResponseSchema, StructuredOutputParser, ChatOpenAI, LangChain | Prompt engineering to get one random joke or rate one joke | `python advanced/joke_bot.py --rate "Why couldn't the bicycle stand up by itself? It was two tired."` or `python advanced/joke_bot.py --tell --num 4` | ![](assets/screens/joke_bot.gif) ![](assets/guide/joke_bot.png) | 
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)  ![](assets/notes/chat-doc-flow.jpeg) | 
 |  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) ![](assets/screens/image_auto_annotation.gif)  | 
+|  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
 
 # Notebooks
 

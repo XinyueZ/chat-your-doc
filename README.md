@@ -108,6 +108,7 @@ Chroma, FAISS
 | 💥 [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
 | [retriever.py](simple/retriever.py)  | DocArrayInMemorySearch, RunnableMap, StrOutputParser, ChatOpenAI, LangChain | Use concept of retriever and LangChain Expression Language (LCEL) | `streamlit run simple/retriever.py --server.port 8004 --server.enableCORS false` | ![](assets/notes/retriever.png) ![](assets/screens/retriever.gif)| 
 | [hello_llamaindex.py](simple/hello_llamaindex.py)  | A very simple [LlamaIndex](https://www.llamaindex.ai/) to break ice of the story. | `streamlit run simple/hello_llamaindex.py --server.port 8005 --server.enableCORS false` | | 
+| [llamaindex_context.py](simple/llamaindex_context.py)  | A [LlamaIndex](https://www.llamaindex.ai/), intro of context for configuration, StorageContext, ServiceContext. | `streamlit run simple/llamaindex_context.py --server.port 8006 --server.enableCORS false` | | 
 
 ## Intermediate
 

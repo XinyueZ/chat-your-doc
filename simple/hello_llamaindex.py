@@ -8,13 +8,15 @@ class HelloLlamaIndex:
     _query_engine: BaseQueryEngine
 
     def __init__(self):
-        index: VectorStoreIndex = VectorStoreIndex.from_documents(
-            SimpleDirectoryReader("./tmp").load_data()
-        )
-        self._query_engine = index.as_query_engine()
+        if "query_engine" not in st.session_state:
+            index: VectorStoreIndex = VectorStoreIndex.from_documents(
+                SimpleDirectoryReader("./tmp").load_data()
+            )
+            st.session_state["query_engine"] = index.as_query_engine()
+        self._query_engine = st.session_state["query_engine"]
 
     def run(self):
-        query: str = st.text_input("Query", "hello world")
+        query: str = st.text_input("Query", placeholder="Enter your query here")
         if query != "":
             result: RESPONSE_TYPE = self._query_engine.query(query)
             st.write(result.response)

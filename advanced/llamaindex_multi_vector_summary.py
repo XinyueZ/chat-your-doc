@@ -34,7 +34,7 @@ from llama_index.indices.document_summary import (
 
 MODE = "OR"
 TEMPERATURE = 0.0
-TOP_K = 5
+SIM_TOP_K = 5
 CHUNK_OVERLAP = 30
 CHUNK_SIZE = 150
 DOC_DIR = "./tmp"
@@ -127,10 +127,10 @@ class LlamaIndexMultiVectorSummary:
             # summary_index.as_retriever() will be replaced by
             summary_retriever: BaseRetriever = DocumentSummaryIndexLLMRetriever(
                 summary_index,
-                similarity_top_k=TOP_K,
+                similarity_top_k=SIM_TOP_K,
             )
             vector_retriever: BaseRetriever = vector_index.as_retriever(
-                similarity_top_k=TOP_K,
+                similarity_top_k=SIM_TOP_K,
             )
 
             multi_vec_sum_retriever: BaseRetriever = MultiVectorSummaryRetriever(

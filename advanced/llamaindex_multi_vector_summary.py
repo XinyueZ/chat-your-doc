@@ -12,31 +12,39 @@ from llama_index import (
     VectorStoreIndex,
     get_response_synthesizer,
 )
-from llama_index.response_synthesizers.type import ResponseMode
 from llama_index.core import BaseQueryEngine, BaseRetriever
 from llama_index.embeddings import OpenAIEmbedding
 from llama_index.embeddings.openai import OpenAIEmbeddingModelType
 from llama_index.embeddings.utils import EmbedType
 from llama_index.indices.base import BaseIndex
-from llama_index.indices.document_summary import DocumentSummaryIndex
-from llama_index.llms import OpenAI
-from llama_index.llms.utils import LLMType
-from llama_index.query_engine import RetrieverQueryEngine
-from llama_index.response.schema import RESPONSE_TYPE
-from llama_index.response_synthesizers.base import BaseSynthesizer
-from llama_index.schema import NodeWithScore
-from llama_index.vector_stores import ChromaVectorStore
-from loguru import logger
 from llama_index.indices.document_summary import (
+    DocumentSummaryIndex,
     DocumentSummaryIndexEmbeddingRetriever,
     DocumentSummaryIndexLLMRetriever,
 )
+from llama_index.indices.postprocessor import (
+    MetadataReplacementPostProcessor,
+    SentenceTransformerRerank,
+)
+from llama_index.llms import OpenAI
+from llama_index.llms.utils import LLMType
+from llama_index.node_parser import SentenceWindowNodeParser
+from llama_index.postprocessor.types import BaseNodePostprocessor
+from llama_index.query_engine import RetrieverQueryEngine
+from llama_index.response.schema import RESPONSE_TYPE
+from llama_index.response_synthesizers.base import BaseSynthesizer
+from llama_index.response_synthesizers.type import ResponseMode
+from llama_index.schema import NodeWithScore
+from llama_index.vector_stores import ChromaVectorStore
+from loguru import logger
 
 MODE = "OR"
 TEMPERATURE = 0.0
-SIM_TOP_K = 5
+SIM_TOP_K = 3
+RERANK_TOP_K = 3
 CHUNK_OVERLAP = 30
 CHUNK_SIZE = 150
+WIN_SZ = 3
 DOC_DIR = "./tmp"
 
 
@@ -89,7 +97,7 @@ class LlamaIndexMultiVectorSummary:
     def __init__(self):
         if "query_engine" not in st.session_state:
             llm = OpenAI(model="gpt-4-1106-preview", temperature=TEMPERATURE)
-            embs = OpenAIEmbedding(model=OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002)
+            embs = "local:BAAI/bge-small-en-v1.5"  # OpenAIEmbedding(model=OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002)
 
             service_context: ServiceContext = (
                 LlamaIndexMultiVectorSummary.create_service_context(llm, embs)
@@ -143,18 +151,33 @@ class LlamaIndexMultiVectorSummary:
                 response_mode=ResponseMode.REFINE,
             )
 
+            postproc: BaseNodePostprocessor = MetadataReplacementPostProcessor(
+                target_metadata_key="window"
+            )
+            rerank: BaseNodePostprocessor = SentenceTransformerRerank(
+                top_n=RERANK_TOP_K, model="BAAI/bge-reranker-base"
+            )
+
             st.session_state["query_engine"] = RetrieverQueryEngine(
                 retriever=multi_vec_sum_retriever,
                 response_synthesizer=response_synthesizer,
+                node_postprocessors=[postproc, rerank],
             )
 
         self._query_engine = st.session_state["query_engine"]
 
     @classmethod
     def create_service_context(cls, llm: LLMType, embs: EmbedType) -> ServiceContext:
+        node_parser = SentenceWindowNodeParser.from_defaults(
+            window_size=WIN_SZ,
+            window_metadata_key="window",
+            original_text_metadata_key="original_text",
+        )
+
         return ServiceContext.from_defaults(
-            chunk_overlap=CHUNK_OVERLAP,
-            chunk_size=CHUNK_SIZE,
+            # chunk_overlap=CHUNK_OVERLAP,
+            # chunk_size=CHUNK_SIZE,
+            node_parser=node_parser,
             llm=llm,
             embed_model=embs,
         )

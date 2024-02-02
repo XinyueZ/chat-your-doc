@@ -86,6 +86,11 @@ Chroma, FAISS
 
 > Full instructions for creating a LangChain App Template can be found here: [LangChain App Template](https://python.langchain.com/docs/guides/deployments/template_repos)
 
+## Llama-Index: Multi-Vector Retriever / Summary
+
+[Multi-Vector Retriever / Summary with Llama-Index](https://teetracker.medium.com/llama-index-multi-vector-retriever-summary-9231137d3cab)
+
+>  Advanced RAG approache with Llama-Index to implement multi-vector retriever and summary.
 
 | App |  Models & Components|Description | Launch | Demo |
 | --- | --- |--- | --- | --- |
@@ -96,6 +101,7 @@ Chroma, FAISS
 |  [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |ChatOpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
 |  [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain, OpenAI SDK | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/guide/OpenAI_Assistant_Chat_And_Completions.jpeg) ![](assets/guide/OpenAI_Assistant_Function_And_Tool.jpeg) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
 |  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
+|  [llamaindex_multi_vector_summary.py](advanced/llamaindex_multi_vector_summary.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply multi-vectory summary pattern | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://teetracker.medium.com/llama-index-multi-vector-retriever-summary-9231137d3cab)  ![](assets/guide/Multi-Vector-Retriever-Summary.jpg) | 
 
 ## Simple
 
@@ -132,6 +138,7 @@ Chroma, FAISS
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)  ![](assets/notes/chat-doc-flow.jpeg) | 
 |  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) ![](assets/screens/image_auto_annotation.gif)  | 
 |  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
+|  [llamaindex_multi_vector_summary.py](advanced/llamaindex_multi_vector_summary.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply multi-vectory summary pattern | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://teetracker.medium.com/llama-index-multi-vector-retriever-summary-9231137d3cab)  ![](assets/guide/Multi-Vector-Retriever-Summary.jpg) | 
 
 # Notebooks
 

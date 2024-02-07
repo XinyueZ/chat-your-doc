@@ -173,7 +173,7 @@ class LlamaIndexMultiVectorSummaryAgent:
 
     @classmethod
     def create_storage_context(cls) -> StorageContext:
-        path: str = "./db/LlamaIndexMultiVectorSummary"
+        path: str = "./db/LlamaIndexMultiVectorSummaryAgent"
         return StorageContext.from_defaults(
             vector_store=ChromaVectorStore(create_vectors(path=path))
         )

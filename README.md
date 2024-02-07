@@ -92,6 +92,10 @@ Chroma, FAISS
 
 >  Advanced RAG approache with Llama-Index to implement multi-vector retriever and summary.
 
+[Create Agent from Scratch](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f) 
+
+Intuitively create an agent from scratch with LangChain.
+
 ## Simple
 
 | App | Models & Components|Description | Launch | Demo |
@@ -138,6 +142,7 @@ Chroma, FAISS
 | [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
 | [image_description.ipynb](notebooks/image_description.ipynb)  | [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description | | 
 | [image_desc2music.ipynb](notebooks/image_desc2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft) [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description and generate music based on the image | | 
+| [langchain_agent_scratch.ipynb](notebooks/langchain_agent_scratch.ipynb)  | Create the agent from scratch | [read](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f)  |  ![](assets/guide/langchain_agent_scratch.webp) | 
 | [llamaindex_vector_summary_retriever.ipynb](notebooks/llamaindex_vector_summary_retriever.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)  |  ![](assets/guide/vector_summary_retriever.jpg) | 
 | [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read]()  |  ![](assets/guide/vector_summary_agent.png) | 
 

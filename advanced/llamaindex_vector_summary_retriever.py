@@ -91,7 +91,7 @@ class MultiVectorSummaryRetriever(BaseRetriever):
         return retrieve_nodes
 
 
-class LlamaIndexMultiVectorSummary:
+class LlamaIndexVectorSummaryRetriever:
     _query_engine: BaseQueryEngine
 
     def __init__(self):
@@ -100,11 +100,11 @@ class LlamaIndexMultiVectorSummary:
             embs = "local:BAAI/bge-small-en-v1.5"  # OpenAIEmbedding(model=OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002)
 
             service_context: ServiceContext = (
-                LlamaIndexMultiVectorSummary.create_service_context(llm, embs)
+                LlamaIndexVectorSummaryRetriever.create_service_context(llm, embs)
             )
 
             storage_context: StorageContext = (
-                LlamaIndexMultiVectorSummary.create_storage_context()
+                LlamaIndexVectorSummaryRetriever.create_storage_context()
             )
 
             required_exts: List[str] = [".pdf"]
@@ -200,4 +200,4 @@ class LlamaIndexMultiVectorSummary:
 
 
 if __name__ == "__main__":
-    LlamaIndexMultiVectorSummary()()
+    LlamaIndexVectorSummaryRetriever()()

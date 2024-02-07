@@ -53,7 +53,7 @@ def create_vectors(path: str, collection_name="tmp_collection") -> Collection:
     return chroma_client.get_or_create_collection(collection_name)
 
 
-class LlamaIndexMultiVectorSummaryAgent:
+class LlamaIndexVectorSummaryAgent:
     def __init__(self) -> None:
         if "agent" not in st.session_state:
             filepath = self._upload_doc()
@@ -64,11 +64,11 @@ class LlamaIndexMultiVectorSummaryAgent:
                 embs = "local:BAAI/bge-small-en-v1.5"
 
                 service_context: ServiceContext = (
-                    LlamaIndexMultiVectorSummaryAgent.create_service_context(llm, embs)
+                    LlamaIndexVectorSummaryAgent.create_service_context(llm, embs)
                 )
 
                 storage_context: StorageContext = (
-                    LlamaIndexMultiVectorSummaryAgent.create_storage_context()
+                    LlamaIndexVectorSummaryAgent.create_storage_context()
                 )
 
                 input_files: List[str] = [filepath]
@@ -94,7 +94,7 @@ class LlamaIndexMultiVectorSummaryAgent:
 
                 logger.debug("Start creating agent with tools")
                 summary_query_engine: BaseQueryEngine = (
-                    LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
+                    LlamaIndexVectorSummaryAgent.from_retriever_to_query_engine(
                         service_context=service_context,
                         retriever=DocumentSummaryIndexLLMRetriever(
                             summary_index,
@@ -102,31 +102,22 @@ class LlamaIndexMultiVectorSummaryAgent:
                         ),
                     )
                 )
-                summary_text = LlamaIndexMultiVectorSummaryAgent.get_summary(
-                    summary_query_engine=summary_query_engine,
-                    saved_summary_path="./db/summary_output.pkl",
+                vector_query_engine: BaseQueryEngine = (
+                    LlamaIndexVectorSummaryAgent.from_retriever_to_query_engine(
+                        service_context=service_context,
+                        retriever=vector_index.as_retriever(similarity_top_k=SIM_TOP_K),
+                    )
                 )
                 query_engine_tools = [
                     QueryEngineTool(
-                        query_engine=LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
-                            service_context=service_context,
-                            retriever=DocumentSummaryIndexLLMRetriever(
-                                summary_index,
-                                similarity_top_k=SIM_TOP_K,
-                            ),
-                        ),
+                        query_engine=summary_query_engine,
                         metadata=ToolMetadata(
                             name="summary_tool",
-                            description=summary_text,
+                            description=f"Useful for summarization questions on the `{filepath}` document",
                         ),
                     ),
                     QueryEngineTool(
-                        query_engine=LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
-                            service_context=service_context,
-                            retriever=vector_index.as_retriever(
-                                similarity_top_k=SIM_TOP_K
-                            ),
-                        ),
+                        query_engine=vector_query_engine,
                         metadata=ToolMetadata(
                             name="vector_tool",
                             description=f"Useful for questions related to specific facts in the `{filepath}` document",
@@ -246,4 +237,4 @@ class LlamaIndexMultiVectorSummaryAgent:
 
 
 if __name__ == "__main__":
-    LlamaIndexMultiVectorSummaryAgent()()
+    LlamaIndexVectorSummaryAgent()()

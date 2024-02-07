@@ -94,7 +94,7 @@ Chroma, FAISS
 
 [Create Agent from Scratch](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f) 
 
-Intuitively create an agent from scratch with LangChain.
+> Intuitively create an agent from scratch with LangChain.
 
 ## Simple
 

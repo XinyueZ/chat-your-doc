@@ -94,7 +94,7 @@ class LlamaIndexMultiVectorSummaryAgent:
                 logger.debug("Start creating agent with tools")
                 query_engine_tools = [
                     QueryEngineTool(
-                        query_engine=LlamaIndexMultiVectorSummaryAgent._from_retriever_to_query_engine(
+                        query_engine=LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
                             service_context=service_context,
                             retriever=DocumentSummaryIndexLLMRetriever(
                                 summary_index,
@@ -107,7 +107,7 @@ class LlamaIndexMultiVectorSummaryAgent:
                         ),
                     ),
                     QueryEngineTool(
-                        query_engine=LlamaIndexMultiVectorSummaryAgent._from_retriever_to_query_engine(
+                        query_engine=LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
                             service_context=service_context,
                             retriever=vector_index.as_retriever(
                                 similarity_top_k=SIM_TOP_K
@@ -179,7 +179,7 @@ class LlamaIndexMultiVectorSummaryAgent:
         )
 
     @classmethod
-    def _from_retriever_to_query_engine(
+    def from_retriever_to_query_engine(
         cls,
         service_context: ServiceContext,
         retriever: BaseRetriever,

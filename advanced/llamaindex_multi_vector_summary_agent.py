@@ -37,6 +37,7 @@ from llama_index.indices.document_summary import (
     DocumentSummaryIndex,
     DocumentSummaryIndexLLMRetriever,
 )
+import pickle
 
 TEMPERATURE = 0.0
 SIM_TOP_K = 3
@@ -92,6 +93,19 @@ class LlamaIndexMultiVectorSummaryAgent:
                 logger.debug("Finish loading document index from storage")
 
                 logger.debug("Start creating agent with tools")
+                summary_query_engine: BaseQueryEngine = (
+                    LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
+                        service_context=service_context,
+                        retriever=DocumentSummaryIndexLLMRetriever(
+                            summary_index,
+                            similarity_top_k=SIM_TOP_K,
+                        ),
+                    )
+                )
+                summary_text = LlamaIndexMultiVectorSummaryAgent.get_summary(
+                    summary_query_engine=summary_query_engine,
+                    saved_summary_path="./db/summary_output.pkl",
+                )
                 query_engine_tools = [
                     QueryEngineTool(
                         query_engine=LlamaIndexMultiVectorSummaryAgent.from_retriever_to_query_engine(
@@ -102,8 +116,8 @@ class LlamaIndexMultiVectorSummaryAgent:
                             ),
                         ),
                         metadata=ToolMetadata(
-                            name=f"vector_tool",
-                            description=f"Useful for questions related to specific facts in the `{filepath}` document",
+                            name="summary_tool",
+                            description=summary_text,
                         ),
                     ),
                     QueryEngineTool(
@@ -114,8 +128,8 @@ class LlamaIndexMultiVectorSummaryAgent:
                             ),
                         ),
                         metadata=ToolMetadata(
-                            name=f"summary_tool",
-                            description=f"Useful for summarization questions about the `{filepath}` document",
+                            name="vector_tool",
+                            description=f"Useful for questions related to specific facts in the `{filepath}` document",
                         ),
                     ),
                 ]
@@ -125,7 +139,7 @@ class LlamaIndexMultiVectorSummaryAgent:
                     verbose=True,
                     system_prompt=f"""\
             You are a specialized agent designed to answer queries about the `{filepath}` document.
-            You must ALWAYS use at least one of the tools provided when answering a question; do NOT rely on prior knowledge.\
+            You must ALWAYS use at least ONE of the tools provided when answering a question; do NOT rely on prior knowledge.\
             """,
                 )
                 logger.debug("Finish creating agent with tools")
@@ -199,6 +213,25 @@ class LlamaIndexMultiVectorSummaryAgent:
             response_synthesizer=response_synthesizer,
             node_postprocessors=[postproc, rerank],
         )
+
+    @classmethod
+    def get_summary(
+        cls,
+        summary_query_engine: BaseQueryEngine,
+        saved_summary_path: str = "./summary_output.pkl",
+    ) -> str:
+        if not os.path.exists(saved_summary_path):
+            Path(saved_summary_path).parent.mkdir(parents=True, exist_ok=True)
+            summary = str(
+                summary_query_engine.query(
+                    "Extract a concise 1-2 line summary of this document"
+                )
+            )
+            pickle.dump(summary, open(saved_summary_path, "wb"))
+        else:
+            summary: str = pickle.load(open(saved_summary_path, "rb"))
+
+        return summary
 
     def run(self):
         if "agent" in st.session_state:

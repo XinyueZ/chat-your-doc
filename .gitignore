@@ -8,3 +8,4 @@ __pycache__
 /indices
 simple/wine-price-app/packages/csv-agent/wine_data/*.faiss
 simple/wine-price-app/packages/csv-agent/wine_data/*.pkl
+*.pkl

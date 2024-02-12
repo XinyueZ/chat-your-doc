@@ -86,15 +86,21 @@ Chroma, FAISS
 
 > Full instructions for creating a LangChain App Template can be found here: [LangChain App Template](https://python.langchain.com/docs/guides/deployments/template_repos)
 
-## Llama-Index: Multi-Vector Retriever / Summary
+# RAG, Vector and Summary pattern implementation
 
-[Multi-Vector Retriever / Summary with Llama-Index](https://teetracker.medium.com/llama-index-multi-vector-retriever-summary-9231137d3cab)
+[Llama-Index: RAG with Vector and Summary](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)
+> Multi-Retrievers with Vector and Summary pattern implementation.
 
->  Advanced RAG approache with Llama-Index to implement multi-vector retriever and summary.
+[Llama-Index: RAG with Vector and Summary by using Agent](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)
+> Agent for Vector and Summary pattern implementation.
 
 [Create Agent from Scratch](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f) 
 
 > Intuitively create an agent from scratch with LangChain.
+
+[Create Agent from Scratch](https://medium.com/@teetracker/llama-index-building-an-agent-from-scratch-73be48f7f266) 
+
+> Intuitively create an agent from scratch with  [LlamaIndex](https://www.llamaindex.ai/).
 
 ## Simple
 
@@ -131,8 +137,8 @@ Chroma, FAISS
 |  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)  ![](assets/notes/chat-doc-flow.jpeg) | 
 |  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) ![](assets/screens/image_auto_annotation.gif)  | 
 |  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
-|  [llamaindex_vector_summary_retriever.py](advanced/llamaindex_vector_summary_retriever.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://teetracker.medium.com/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
-|  [llamaindex_vector_summary_agent.py](advanced/llamaindex_vector_summary_agent.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | `streamlit run advanced/llamaindex_multi_vector_summary_agent.py --server.port 8009 --server.enableCORS false` |   ![](assets/guide/vector_summary_agent.png)  | 
+|  [llamaindex_vector_summary_retriever.py](advanced/llamaindex_vector_summary_retriever.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
+|  [llamaindex_vector_summary_agent.py](advanced/llamaindex_vector_summary_agent.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | `streamlit run advanced/llamaindex_multi_vector_summary_agent.py --server.port 8009 --server.enableCORS false` | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)  ![](assets/guide/vector_summary_agent.png)  | 
 
 # Notebooks
 
@@ -142,9 +148,10 @@ Chroma, FAISS
 | [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
 | [image_description.ipynb](notebooks/image_description.ipynb)  | [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description | | 
 | [image_desc2music.ipynb](notebooks/image_desc2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft) [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description and generate music based on the image | | 
-| [langchain_agent_scratch.ipynb](notebooks/langchain_agent_scratch.ipynb)  | Create the agent from scratch | [read](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f)  |  ![](assets/guide/langchain_agent_scratch.webp) | 
+| [langchain_agent_scratch.ipynb](notebooks/langchain_agent_scratch.ipynb)  | Create the agent from scratch in langchain | [read](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f)  |  ![](assets/guide/langchain_agent_scratch.webp) | 
+| [llamaindex_agent_from_scratch.ipynb](notebooks/llamaindex_agent_from_scratch.ipynb)  | Create the agent from scratch with [LlamaIndex](https://www.llamaindex.ai/) | [read](https://teetracker.medium.com/llama-index-building-an-agent-from-scratch-73be48f7f266)  |  ![](assets/guide/llamaindex_agent_scratch.jpg) | 
 | [llamaindex_vector_summary_retriever.ipynb](notebooks/llamaindex_vector_summary_retriever.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)  |  ![](assets/guide/vector_summary_retriever.jpg) | 
-| [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read]()  |  ![](assets/guide/vector_summary_agent.png) | 
+| [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)  |  ![](assets/guide/vector_summary_agent.png) | 
 
 
 

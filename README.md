@@ -102,6 +102,10 @@ Chroma, FAISS
 
 > Intuitively create an agent from scratch with  [LlamaIndex](https://www.llamaindex.ai/).
 
+[Multi-Query Retrieval with RAG](https://teetracker.medium.com/langchain-llama-index-rag-with-multi-query-retrieval-4e7df1a62f83)
+
+> Enhance query context with intermediate queries during RAG to improve information retrieval for the original query.
+
 ## Simple
 
 | App | Models & Components|Description | Launch | Demo |
@@ -152,6 +156,7 @@ Chroma, FAISS
 | [llamaindex_agent_from_scratch.ipynb](notebooks/llamaindex_agent_from_scratch.ipynb)  | Create the agent from scratch with [LlamaIndex](https://www.llamaindex.ai/) | [read](https://teetracker.medium.com/llama-index-building-an-agent-from-scratch-73be48f7f266)  |  ![](assets/guide/llamaindex_agent_scratch.jpg) | 
 | [llamaindex_vector_summary_retriever.ipynb](notebooks/llamaindex_vector_summary_retriever.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)  |  ![](assets/guide/vector_summary_retriever.jpg) | 
 | [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)  |  ![](assets/guide/vector_summary_agent.png) | 
+| [multi_queries_retrieval.ipynb](notebooks/multi_queries_retrieval.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) and LangChain to apply mutli-query pattern for RAG | [read](https://teetracker.medium.com/langchain-llama-index-rag-with-multi-query-retrieval-4e7df1a62f83)  |  ![](assets/guide/multi_queries.png) | 
 
 
 

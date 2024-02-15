@@ -61,7 +61,7 @@ import base64
 
 def image_detector(image_path: str) -> str:
     """Detects objects in an image as much as possible and returns the description of the image."""
-    with open("tmp/xmasroom.jpeg", "rb") as image_file:
+    with open(image_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
         # pretty_print("base64_image", base64_image)
 
@@ -94,7 +94,7 @@ pretty_print("image_description", image_description)
 from langchain.prompts.chat import ChatPromptTemplate
 
 
-def coco_label_extractor(image_description: str) -> str:
+def coco_label_extractor(img_desc: str) -> str:
     """Read an image description and extract COCO defined labels as much as possible from the description."""
     chat_template = ChatPromptTemplate.from_messages(
         [
@@ -107,7 +107,7 @@ def coco_label_extractor(image_description: str) -> str:
             ("human", "Image descritpion: {img_desc}"),
         ]
     )
-    human_input = chat_template.format_messages(img_desc=image_description)
+    human_input = chat_template.format_messages(img_desc=img_desc)
     chat = ChatOpenAI(model="gpt-4-vision-preview", temperature=0, max_tokens=1024)
     return chat.invoke(human_input).content
 

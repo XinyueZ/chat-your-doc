@@ -106,116 +106,60 @@ Chroma, FAISS
 
 > Enhance query context with intermediate queries during RAG to improve information retrieval for the original query.
 
+[Prio-reasoning](https://teetracker.medium.com/prio-reasoning-919fd6e90d86)
+
+> Explain how prio-reasoning works in LangChain(qa-chain with refine) and LlamaIndex (MultiStepQueryEngine).
+
 ## Simple
 
-| App | Models & Components|Description | Launch | Demo |
-| --- | --- |--- | --- | --- |
-| [i-ask.sh](simple/i-ask.sh)  |OpenAI http-request| Simply ask & answer via OpenAI API | `i-ask.sh "Who is Joe Biden?"` | ![](assets/screens/i-ask.gif) | 
-| [chat_openai.py](simple/chat_openai.py)  |ChatOpenAI, LangChain | Just one chat session  | `streamlit run simple/chat_openai.py --server.port 8000 --server.enableCORS false` | ![](assets/screens/chat_openai.gif) | 
-| [open_api_llm_app.py](simple/open_api_llm_app.py)  |OpenAI, LLMChain, LangChain| Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
-| [read_html_app.py](simple/read_html_app.py)  | CharacterTextSplitter, LangChain | Get html content and chunk| `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
-| 💥 [chatbot.py](simple/chatbot.py)  | ConversationChain, ConversationBufferMemory, ChatOpenAI, LangChain | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
-| [retriever.py](simple/retriever.py)  | DocArrayInMemorySearch, RunnableMap, StrOutputParser, ChatOpenAI, LangChain | Use concept of retriever and LangChain Expression Language (LCEL) | `streamlit run simple/retriever.py --server.port 8004 --server.enableCORS false` | ![](assets/notes/retriever.png) ![](assets/screens/retriever.gif)| 
-| [hello_llamaindex.py](simple/hello_llamaindex.py)  | A very simple [LlamaIndex](https://www.llamaindex.ai/) to break ice of the story. | `streamlit run simple/hello_llamaindex.py --server.port 8005 --server.enableCORS false` | | 
+| App | Description | Launch | Demo |
+| --- |--- | --- | --- |
+| [i-ask.sh](simple/i-ask.sh)  | Simply ask & answer via OpenAI API | `i-ask.sh "Who is Joe Biden?"` | ![](assets/screens/i-ask.gif) | 
+| [chat_openai.py](simple/chat_openai.py)  | Just one chat session  | `streamlit run simple/chat_openai.py --server.port 8000 --server.enableCORS false` | ![](assets/screens/chat_openai.gif) | 
+| [open_api_llm_app.py](simple/open_api_llm_app.py)   | Use OpenAI LLM to answer simple question | `streamlit run simple/open_api_llm_app.py --server.port 8001 --server.enableCORS false` | ![](assets/screens/open_api_llm_app.gif) | 
+| [read_html_app.py](simple/read_html_app.py)  | Get html content and chunk | `streamlit run simple/read_html_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/read_html_app.gif) | 
+| 💥 [chatbot.py](simple/chatbot.py)   | Basic chatbot | `streamlit run simple/chatbot.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/chatbot.gif) ![](assets/guide/chatbot.png)| 
+| [retriever.py](simple/retriever.py)  | Use concept of retriever and LangChain Expression Language (LCEL) | `streamlit run simple/retriever.py --server.port 8004 --server.enableCORS false` | ![](assets/notes/retriever.png) ![](assets/screens/retriever.gif)| 
+| [hello_llamaindex.py](simple/hello_llamaindex.py) | A very simple [LlamaIndex](https://www.llamaindex.ai/) to break ice of the story. | `streamlit run simple/hello_llamaindex.py --server.port 8005 --server.enableCORS false` | | 
 | [llamaindex_context.py](simple/llamaindex_context.py)  | A simple app of [LlamaIndex](https://www.llamaindex.ai/), introduce of context for configuration, StorageContext, ServiceContext. | `streamlit run simple/llamaindex_context.py --server.port 8006 --server.enableCORS false` | | 
-| [llamaindex_hub_simple.py](simple/llamaindex_hub_simple.py)  | A simple app of [LlamaIndex](https://www.llamaindex.ai/), introduce of load stuff from [https://llamahub.ai/](LlamaHub) | `streamlit run simple/llamaindex_hub_simple.py --server.port 8007 --server.enableCORS false` | | 
+| [llamaindex_hub_simple.py](simple/llamaindex_hub_simple.py)   | A simple app of [LlamaIndex](https://www.llamaindex.ai/), introduce of load stuff from [https://llamahub.ai/](LlamaHub). | `streamlit run simple/llamaindex_hub_simple.py --server.port 8007 --server.enableCORS false` | | 
+| 💥 [prio_reasoning_context.py](simple/prio_reasoning_context.py)   | A simple app that based on RAG with Prio-Reasoning pattern in  [LlamaIndex](https://www.llamaindex.ai/) or LangChain.| `streamlit run simple/prio_reasoning_context.py --server.port 8008 --server.enableCORS false` | [read](https://teetracker.medium.com/https://teetracker.medium.com/prio-reasoning-919fd6e90d86) ![](assets/screens/prio_reasoning_context.gif) ![](assets/guide/prio_reasoning_context_langchain.webp) ![](assets/guide/prio_reasoning_context_llamaindex.webp) | 
 
 ## Intermediate
 
-| App | Models & Components|Description | Launch | Demo |
-| --- | --- |--- | --- | --- |
-| 💥 [sim_app.py](intermediate/sim_app.py)  | Chroma,  RecursiveCharacterTextSplitter, OpenAIEmbeddings, LangChain | Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
-| [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py)  | ChatOpenAI, LLMChain, LangChain | Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
-| [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)  | ChatOpenAI, LangChain | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
-| 💥 [html_2_json_app.py](intermediate/html_2_json_app.py)  | ChatOpenAI, LangChain | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
-| [assistants.py](intermediate/assistants.py)  | OpenAIAssistantRunnable, LangChain, OpenAI SDK | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/guide/OpenAI_Assistant_Chat_And_Completions.jpeg) ![](assets/guide/OpenAI_Assistant_Function_And_Tool.jpeg) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
+| App | Description | Launch | Demo |
+| --- | --- | --- | --- |
+| 💥 [sim_app.py](intermediate/sim_app.py)  | Use the vector database to save file in chunks and retrieve similar content from the database | `streamlit run intermediate/sim_app.py --server.port 8002 --server.enableCORS false` | ![](assets/screens/sim_app.gif) | 
+| [llm_chain_translator_app.py](intermediate/llm_chain_translator_app.py) | Use LLMChain to do language translation | `streamlit run intermediate/llm_chain_translator_app.py --server.port 8003 --server.enableCORS false` | ![](assets/screens/llm_chain_translator_app.gif)  ![](assets/guide/llm_chain_translator_app.png) | 
+| [html_summary_chat_app.py](intermediate/html_summary_chat_app.py)   | Summary html content | `streamlit run intermediate/html_summary_chat_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/html_summary_chat_app.gif) | 
+| 💥 [html_2_json_app.py](intermediate/html_2_json_app.py) | Summary html keypoints into keypoint json | `streamlit run intermediate/html_2_json_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/html_2_json_app.png) | 
+| [assistants.py](intermediate/assistants.py)   | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/guide/OpenAI_Assistant_Chat_And_Completions.jpeg) ![](assets/guide/OpenAI_Assistant_Function_And_Tool.jpeg) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
 
 ## 💥 Advanced
 
-| App |  Models & Components|Description | Launch | Demo |
-| --- | --- |--- | --- | --- |
-|  [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  |OpenAI, Chroma, RecursiveCharacterTextSplitter, load_qa_chain->BaseCombineDocumentsChain, LangChain| Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
-|  [faiss_app.py](advanced/faiss_app.py)  |OpenAI, FAISS, OpenAIEmbeddings, RecursiveCharacterTextSplitter,  **VectorDBQAWithSourcesChain** LangChain | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
-|  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | ResponseSchema, StructuredOutputParser, LangChain | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
-|  [joke_bot.py](advanced/joke_bot.py)  | ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate ResponseSchema, StructuredOutputParser, ChatOpenAI, LangChain | Prompt engineering to get one random joke or rate one joke | `python advanced/joke_bot.py --rate "Why couldn't the bicycle stand up by itself? It was two tired."` or `python advanced/joke_bot.py --tell --num 4` | ![](assets/screens/joke_bot.gif) ![](assets/guide/joke_bot.png) | 
-|  [chat_ur_docs.py](advanced/chat_ur_docs.py)  | ConversationalRetrievalChain, ConversationBufferMemory, ChatOpenAI, LangChain | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)  ![](assets/notes/chat-doc-flow.jpeg) | 
-|  [image_auto_annotation.py](advanced/image_auto_annotation.py)  |ChatOpenAI, AgentExecutor, BaseTool,  BlipForConditionalGeneration, BlipProcessor, GroundingDINO | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) ![](assets/screens/image_auto_annotation.gif)  | 
-|  [adv_rag.py](advanced/adv_rag.py)  |ChatOpenAI, partition_pdf| Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
-|  [llamaindex_vector_summary_retriever.py](advanced/llamaindex_vector_summary_retriever.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
-|  [llamaindex_vector_summary_agent.py](advanced/llamaindex_vector_summary_agent.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | `streamlit run advanced/llamaindex_multi_vector_summary_agent.py --server.port 8009 --server.enableCORS false` | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)  ![](assets/guide/vector_summary_agent.png)  | 
+| App | Description | Launch | Demo |
+| --- | --- | --- | --- |
+|  [qa_chain_pdf_app.py](advanced/qa_chain_pdf_app.py)  | Ask info from PDF file, chat with it | `streamlit run advanced/qa_chain_pdf_app.py --server.port 8004 --server.enableCORS false` | ![](assets/screens/qa_chain_pdf_app.gif)  ![](assets/guide/qa_chain_pdf_app.png) | 
+|  [faiss_app.py](advanced/faiss_app.py)  | Ask info from a internet file, find similar docs and answer with  **VectorDBQAWithSourcesChain** | `streamlit run advanced/faiss_app.py --server.port 8005 --server.enableCORS false` | ![](assets/screens/faiss_app.gif)  ![](assets/guide/faiss_app.png) | 
+|  [html_2_json_output_app.py](advanced/html_2_json_output_app.py)  | Load html content and summary into json objects | `streamlit run advanced/html_2_json_output_app.py --server.port 8006 --server.enableCORS false` | ![](assets/screens/html_2_json_output_app.png)  ![](assets/guide/html_2_json_output_app.png) | 
+|  [joke_bot.py](advanced/joke_bot.py)  | Prompt engineering to get one random joke or rate one joke | `python advanced/joke_bot.py --rate "Why couldn't the bicycle stand up by itself? It was two tired."` or `python advanced/joke_bot.py --tell --num 4` | ![](assets/screens/joke_bot.gif) ![](assets/guide/joke_bot.png) | 
+|  [chat_ur_docs.py](advanced/chat_ur_docs.py)   | Chat with documents freely | `streamlit run advanced/chat_ur_docs.py --server.port 8004 --server.enableCORS false` |[read](https://medium.com/@teetracker/chat-with-your-pdf-streamlit-demo-eb2a3a2882a3)  ![](assets/notes/chat-doc-flow.jpeg) | 
+|  💥 [image_auto_annotation.py](advanced/image_auto_annotation.py)   | Use LLM, LangChain Agent and GroundingDINO to detect objects on images freely (auto-annotation) | `streamlit run advanced/image_auto_annotation.py --server.port 8006 --server.enableCORS false` | [read](https://medium.com/@teetracker/experimentation-llm-langchain-agent-computer-vision-0c405deb7c6e) ![](assets/screens/image_auto_annotation.gif)  | 
+|  [adv_rag.py](advanced/adv_rag.py)  | Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
+|  [llamaindex_vector_summary_retriever.py](advanced/llamaindex_vector_summary_retriever.py)    | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
+|  [llamaindex_vector_summary_agent.py](advanced/llamaindex_vector_summary_agent.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | `streamlit run advanced/llamaindex_multi_vector_summary_agent.py --server.port 8009 --server.enableCORS false` | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)   ![](assets/guide/vector_summary_agent.png)  | 
 
 # Notebooks
 
-| Notebook | Models & Components|Description |  Demo |
-| --- | --- |--- | --- |
-| [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | ChatOpenAI, LangChain, Whisper,  automatic-speech-recognition | Basic audio to text and summary | ![](assets/guide/audio2text2LLM.png)| 
-| [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition | Speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
-| [image_description.ipynb](notebooks/image_description.ipynb)  | [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description | | 
-| [image_desc2music.ipynb](notebooks/image_desc2music.ipynb)  | [audiocraft](https://github.com/facebookresearch/audiocraft) [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large) | A use-case to get the image description and generate music based on the image | | 
-| [langchain_agent_scratch.ipynb](notebooks/langchain_agent_scratch.ipynb)  | Create the agent from scratch in langchain | [read](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f)  |  ![](assets/guide/langchain_agent_scratch.webp) | 
-| [llamaindex_agent_from_scratch.ipynb](notebooks/llamaindex_agent_from_scratch.ipynb)  | Create the agent from scratch with [LlamaIndex](https://www.llamaindex.ai/) | [read](https://teetracker.medium.com/llama-index-building-an-agent-from-scratch-73be48f7f266)  |  ![](assets/guide/llamaindex_agent_scratch.jpg) | 
-| [llamaindex_vector_summary_retriever.ipynb](notebooks/llamaindex_vector_summary_retriever.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)  |  ![](assets/guide/vector_summary_retriever.jpg) | 
-| [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)  |  ![](assets/guide/vector_summary_agent.png) | 
-| [multi_queries_retrieval.ipynb](notebooks/multi_queries_retrieval.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) and LangChain to apply mutli-query pattern for RAG | [read](https://teetracker.medium.com/langchain-llama-index-rag-with-multi-query-retrieval-4e7df1a62f83)  |  ![](assets/guide/multi_queries.png) | 
-| [yolo8_world_and_openai_vision.py](notebooks/yolo8_world_and_openai_vision.py)  | Use [YoLoV8 World](https://docs.ultralytics.com/zh/models/yolo-world/#predict-usage) and OpenAI Vision together to enchance image auto-annotation |   |  ![](assets/screens/yolo8world_openai_vision.png) | 
-
-
-
-# Notes 
-
-<details>
-<summary><span style="font-weight: bold;">These key notes can be very helpful in getting up to speed quickly. Look for them while you're learning and share them with others. These notes are especially useful when you're asking yourself questions like why, what, and how.
-</span></summary>
-<style>
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  td {
-    padding: 8px;
-    text-align: center;
-  }
-  img {
-    width: 100%;
-    height: auto;
-  }
-  @media screen and (max-width: 600px) {
-    table, td, tr {
-      display: block;
-    }
-    td {
-      text-align: center;
-      border-bottom: none;
-    }
-  }
-</style>
-
-<table>
-  <tr>
-    <td><img src="assets/notes/openai_moderation.png"></td>
-    <td><img src="assets/notes/chain-of-thought-reasoning.png"></td>
-    <td><img src="assets/notes/why_langchain_prompt_template.png"></td>
-  </tr>
-  <tr>
-    <td><img src="assets/notes/memory.png"></td>
-    <td><img src="assets/notes/memory_type_1.png"></td>
-    <td><img src="assets/notes/memory_type_2.png"></td>
-  </tr>
-  <tr>
-    <td><img src="assets/notes/seq_chain_1.png"></td>
-    <td><img src="assets/notes/seq_chain_2.png"></td>
-    <td><img src="assets/notes/seq_chain_3.png"></td>
-    <td><img src="assets/notes/seq_chain_4.png"></td>
-  </tr>
-  <tr>
-    <td><img src="assets/notes/llms_on_doc.png"></td>
-    <td><img src="assets/notes/embeddings.png"></td>
-    <td><img src="assets/notes/vec_db_1.png"></td>
-    <td><img src="assets/notes/vec_db_2.png"></td>
-  </tr>
-  <tr>
-    <td><img src="assets/notes/stuff_method.png"></td>
-    <td><img src="assets/notes/map_reduce_refine_map_rerank.png"></td> 
-  </tr>
-</table>
-</details>
+| Notebook |Description |  Demo |
+| --- | --- | --- |
+| [audio2text2LLM.ipynb](notebooks/audio2text2LLM.ipynb)  | Basic audio to text and summary | ![](assets/guide/audio2text2LLM.png)| 
+| [audio2text2music.ipynb](notebooks/audio2text2music.ipynb)   | [audiocraft](https://github.com/facebookresearch/audiocraft), Whisper,  automatic-speech-recognition, speech to text, generate music by the text, synthesis speech+BGM |  ![](assets/guide/audio2text2music.png)| 
+| [image_description.ipynb](notebooks/image_description.ipynb)   | [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large), a use-case to get the image description | | 
+| [image_desc2music.ipynb](notebooks/image_desc2music.ipynb)   | [audiocraft](https://github.com/facebookresearch/audiocraft) [blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base), [blip-image-captioning-large](https://huggingface.co/Salesforce/blip-image-captioning-large), a use-case to get the image description and generate music based on the image | | 
+| [langchain_agent_scratch.ipynb](notebooks/langchain_agent_scratch.ipynb)  | Create the agent from scratch in langchain  | [read](https://teetracker.medium.com/building-an-agent-from-scratch-with-langchain-2e1d1ef2f57f)   ![](assets/guide/langchain_agent_scratch.webp) | 
+| [llamaindex_agent_from_scratch.ipynb](notebooks/llamaindex_agent_from_scratch.ipynb)  | Create the agent from scratch with [LlamaIndex](https://www.llamaindex.ai/)  | [read](https://teetracker.medium.com/llama-index-building-an-agent-from-scratch-73be48f7f266)   ![](assets/guide/llamaindex_agent_scratch.jpg) | 
+| [llamaindex_vector_summary_retriever.ipynb](notebooks/llamaindex_vector_summary_retriever.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
+| [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)    ![](assets/guide/vector_summary_agent.png) | 
+| [multi_queries_retrieval.ipynb](notebooks/multi_queries_retrieval.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) and LangChain to apply mutli-query pattern for RAG | [read](https://teetracker.medium.com/langchain-llama-index-rag-with-multi-query-retrieval-4e7df1a62f83)    ![](assets/guide/multi_queries.png) | 
+| [yolo8_world_and_openai_vision.py](notebooks/yolo8_world_and_openai_vision.py)  | Use [YoLoV8 World](https://docs.ultralytics.com/zh/models/yolo-world/#predict-usage) and OpenAI Vision together to enchance image auto-annotation |   ![](assets/screens/yolo8world_openai_vision.png) | 

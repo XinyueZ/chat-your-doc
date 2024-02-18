@@ -30,6 +30,9 @@ from pydantic import FilePath
 K = 5
 
 
+os.environ["LANGCHAIN_PROJECT"] = "prio_reasoning_context"
+
+
 class BaseQuerier:
     def __init__(self, **kwargs) -> None:
         logger.debug(f"Querier initialized with {kwargs}")
@@ -41,7 +44,8 @@ class BaseQuerier:
     def query(self, query_text: str) -> str:
         return f"""{query_text}
 
-        Only answer based on the context you have, don't use any external or additional information to makeup the answer."""
+Only answer based on the context you have, don't use any external or additional information to makeup the answer.
+"""
 
 
 class LangChainQuerier(BaseQuerier):
@@ -70,15 +74,22 @@ class LangChainQuerier(BaseQuerier):
         qa_chain = load_qa_chain(
             self.model,
             chain_type="refine",
+            return_intermediate_steps=True,
             verbose=True,
         )
-        result = qa_chain.run(
-            input_documents=relevant_docs, question=updated_query_text
+        self.res = qa_chain.invoke(
+            {
+                "input_documents": relevant_docs,
+                "question": updated_query_text,
+            }
         )
-        return result
+        return self.res["output_text"]
 
     def get_intermediate_information(self) -> Tuple[str]:
-        return ()
+        sub_qa_list: Tuple[str] = tuple(
+            ["**AI:**\n\n{}\n\n".format(ai) for ai in self.res["intermediate_steps"]]
+        )
+        return sub_qa_list
 
 
 class LlamaIndexQuerier(BaseQuerier):
@@ -121,9 +132,11 @@ class LlamaIndexQuerier(BaseQuerier):
 
     def get_intermediate_information(self) -> Tuple[str]:
         sub_qa: Dict[str, Any] = self.res.metadata["sub_qa"]
-        sub_qa_list: List[str] = tuple(
+        sub_qa_list: Tuple[str] = tuple(
             [
-                "**Question:**\n{}\n\n**Answer:**\n{}\n\n".format(t[0], t[1].response)
+                "**Updated question:**\n{}\n\n**AI:**\n{}\n\n".format(
+                    t[0], t[1].response
+                )
                 for t in sub_qa
             ]
         )
@@ -174,8 +187,8 @@ def main():
 
     st.sidebar.radio(
         "Method",
-        ["Refine(LangChain)", "MultiStepQueryEngine(Llama-Index)"],
-        index=1,
+        ["QA Chain Refine(LangChain)", "MultiStepQueryEngine(Llama-Index)"],
+        index=0,
         key="method_selector",
         on_change=clear_query_input,
     )
@@ -189,7 +202,7 @@ def main():
         "Tempetrature",
         0.0,
         1.8,
-        1.5,
+        1.0,
         key="temperature_slider",
     )
 
@@ -204,17 +217,16 @@ def main():
         "Query",
         key="query_text",
         placeholder="Enter your query here",
-        value="What is the Vector Search?",
     )
 
     if query_text is not None and query_text != "":
-        if st.session_state.method_selector == "Refine(LangChain)":
+        if st.session_state.method_selector == "QA Chain Refine(LangChain)":
             querier = lc_querier
         else:
             querier = lli_querier
         result: str = querier.query(query_text)
         inter_info = querier.get_intermediate_information()
-        with st.expander("Sub Q&A"):
+        with st.expander("Intermediate Information"):
             for info in inter_info:
                 st.write(info)
         st.title("Result")

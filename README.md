@@ -110,6 +110,10 @@ Chroma, FAISS
 
 > Explain how prio-reasoning works in LangChain(qa-chain with refine) and LlamaIndex (MultiStepQueryEngine).
 
+[RAG with Multi-Query pattern](https://medium.com/@teetracker/rag-with-multi-query-pattern-7272deb3401a) 
+
+> Introduce the Multi-Query pattern in bundle and step-down solutions.
+
 ## Simple
 
 | App | Description | Launch | Demo |
@@ -148,6 +152,7 @@ Chroma, FAISS
 |  [adv_rag.py](advanced/adv_rag.py)  | Advanced RAG approaches, use partition_pdf to extract texts and tables and analyze them | `streamlit run advanced/adv_rag.py --server.port 8007 --server.enableCORS false` | [read](https://medium.com/@teetracker/advanced-rag-228510e7ac77) | 
 |  [llamaindex_vector_summary_retriever.py](advanced/llamaindex_vector_summary_retriever.py)    | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using multi retrievers | `streamlit run advanced/llamaindex_multi_vector_summary.py --server.port 8008 --server.enableCORS false` |  [read](https://medium.com/@teetracker/llama-index-multi-vector-retriever-summary-9231137d3cab)   ![](assets/guide/vector_summary_retriever.jpg) | 
 |  [llamaindex_vector_summary_agent.py](advanced/llamaindex_vector_summary_agent.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | `streamlit run advanced/llamaindex_multi_vector_summary_agent.py --server.port 8009 --server.enableCORS false` | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)   ![](assets/guide/vector_summary_agent.png)  | 
+|  💥 [multi_queries.py](advanced/multi_queries.py)  | Use [LlamaIndex](https://www.llamaindex.ai/) and LangChain to apply the multi-queries pattern, including build method of the LangChain, and custom retriever based solution in Llama-Index, also the other sub-query based solutions | `streamlit run advanced/multi_queries.py --server.port 8010 --server.enableCORS false` | [read](https://medium.com/@teetracker/rag-with-multi-query-pattern-7272deb3401a)    ![](assets/guide/multi_queries_in_bundle.webp)   ![](assets/guide/multi_queries_in_step_down.webp)  | 
 
 # Notebooks
 

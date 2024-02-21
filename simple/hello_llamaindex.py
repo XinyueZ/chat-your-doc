@@ -1,7 +1,7 @@
 import streamlit as st
-from llama_index import SimpleDirectoryReader, VectorStoreIndex
-from llama_index.core import BaseQueryEngine
-from llama_index.response.schema import RESPONSE_TYPE
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+from llama_index.core.base.base_query_engine import BaseQueryEngine
+from llama_index.core.base.response.schema import RESPONSE_TYPE
 
 
 class HelloLlamaIndex:

@@ -114,6 +114,10 @@ Chroma, FAISS
 
 > Introduce the Multi-Query pattern in bundle and step-down solutions.
 
+[LangGraph: hello,world!](https://teetracker.medium.com/langgraph-hello-world-d913677cc222)   
+
+> Introduce the hello,world version use-case with LangGraph, just simple example to kick off the topic.
+
 ## Simple
 
 | App | Description | Launch | Demo |
@@ -168,3 +172,4 @@ Chroma, FAISS
 | [llamaindex_vector_summary_agent.ipynb](notebooks/llamaindex_vector_summary_agent.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) to apply vectory/summary pattern by using agent | [read](https://medium.com/@teetracker/llama-index-rag-with-vector-and-summary-using-agent-551b4b7cef16)    ![](assets/guide/vector_summary_agent.png) | 
 | [multi_queries_retrieval.ipynb](notebooks/multi_queries_retrieval.ipynb)  | Use [LlamaIndex](https://www.llamaindex.ai/) and LangChain to apply mutli-query pattern for RAG | [read](https://teetracker.medium.com/langchain-llama-index-rag-with-multi-query-retrieval-4e7df1a62f83)    ![](assets/guide/multi_queries.png) | 
 | [yolo8_world_and_openai_vision.py](notebooks/yolo8_world_and_openai_vision.py)  | Use [YoLoV8 World](https://docs.ultralytics.com/zh/models/yolo-world/#predict-usage) and OpenAI Vision together to enchance image auto-annotation |   ![](assets/screens/yolo8world_openai_vision.png) | 
+| [langgraph_helloworld.py](notebooks/langgraph_helloworld.ipynb)  | hello,world version of langgraph |   [read](https://teetracker.medium.com/langgraph-hello-world-d913677cc222)    ![](assets/guide/langgraph_helloworld_1.webp) ![](assets/guide/langgraph_helloworld_2.webp) | 

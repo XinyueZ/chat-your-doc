@@ -118,6 +118,10 @@ Chroma, FAISS
 
 > Introduce the hello,world version use-case with LangGraph, just simple example to kick off the topic.
 
+[Quick Tour: Ollama+Gemma+LangChain](https://teetracker.medium.com/quick-tour-ollama-gemma-langchain-ea28e5314256) 
+
+> Use ollama to deploy and use Gemma with langchain on local machine.
+
 ## Simple
 
 | App | Description | Launch | Demo |
@@ -132,6 +136,7 @@ Chroma, FAISS
 | [llamaindex_context.py](simple/llamaindex_context.py)  | A simple app of [LlamaIndex](https://www.llamaindex.ai/), introduce of context for configuration, StorageContext, ServiceContext. | `streamlit run simple/llamaindex_context.py --server.port 8006 --server.enableCORS false` | | 
 | [llamaindex_hub_simple.py](simple/llamaindex_hub_simple.py)   | A simple app of [LlamaIndex](https://www.llamaindex.ai/), introduce of load stuff from [https://llamahub.ai/](LlamaHub). | `streamlit run simple/llamaindex_hub_simple.py --server.port 8007 --server.enableCORS false` | | 
 | 💥 [prio_reasoning_context.py](simple/prio_reasoning_context.py)   | A simple app that based on RAG with Prio-Reasoning pattern in  [LlamaIndex](https://www.llamaindex.ai/) or LangChain.| `streamlit run simple/prio_reasoning_context.py --server.port 8008 --server.enableCORS false` | [read](https://teetracker.medium.com/https://teetracker.medium.com/prio-reasoning-919fd6e90d86) ![](assets/screens/prio_reasoning_context.gif) ![](assets/guide/prio_reasoning_context_langchain.webp) ![](assets/guide/prio_reasoning_context_llamaindex.webp) | 
+| 💥 [ollama_gemma.py](simple/ollama_gemma.py)   | A [Ollama](https://ollama.com/library/gemma) for Gemma integration with the langchain.|  | [read](https://teetracker.medium.com/quick-tour-ollama-gemma-langchain-ea28e5314256) ![](assets/screens/ollama_gemma.gif)  | 
 
 ## Intermediate
 

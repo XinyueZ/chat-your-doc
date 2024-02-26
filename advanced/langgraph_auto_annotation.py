@@ -151,7 +151,9 @@ def coco_label_extractor(state: GraphState) -> str:
         ]
     )
     llm = Ollama(
-        base_url="http://localhost:11434", model="gemma:2b-instruct", temperature=0
+        base_url="http://localhost:11434",
+        model="gemma:2b-instruct",
+        temperature=0,
     )
 
     labels: str = (prompt | llm | LabelsOutputParser()).invoke(
@@ -241,12 +243,17 @@ def doc_uploader() -> StateGraph | None:
 
 
 def main():
-    st.sidebar.slider("Temperature", 0.0, 1.0, 1., key="temperature")
-    st.sidebar.selectbox(
-        "True for BLIP (full local), False for OpenAI GPT-4 Vision (remote)",
-        [True, False],
-        key="is_local_image_detector",
-    )
+    if not bool(
+        st.sidebar.selectbox(
+            "True for BLIP (full local), False for OpenAI GPT-4 Vision (remote)",
+            [True, False],
+            key="is_local_image_detector",
+        )
+    ):
+        st.sidebar.slider("Temperature", 0.0, 1.0, 1.0, key="temperature")
+    else:
+        st.session_state["temperature"] = 0.5
+
     graph: StateGraph | None = doc_uploader()
     if graph is None:
         return

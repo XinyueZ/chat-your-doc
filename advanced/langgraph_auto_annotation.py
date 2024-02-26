@@ -1,13 +1,13 @@
 import base64
 import os
 from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict
-from numpy import double
+
 
 import streamlit as st
 from langchain.prompts import ChatPromptTemplate
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_community.llms.ollama import Ollama
 from langchain_core.messages import HumanMessage
 from langchain.prompts import (
@@ -21,6 +21,9 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Boxes, Results
 from PIL import Image
 import re
+
+from transformers import BlipForConditionalGeneration, BlipProcessor
+import torch
 
 VERBOSE = True
 
@@ -56,6 +59,7 @@ class LabelsOutputParser(BaseTransformOutputParser[str]):
 
     def parse(self, text: str) -> str:
         """Returns the input text with no changes."""
+        pretty_print("parse", text)
         match = re.search(r'coco_labels = "([^"]+)"', text)
         if match:
             labels = match.group(1).split(",")
@@ -64,8 +68,34 @@ class LabelsOutputParser(BaseTransformOutputParser[str]):
         return labels
 
 
+class ImageDescriber:
+    def __init__(
+        self,
+        model_name: str = "Salesforce/blip-image-captioning-base",
+        device: str = None,
+    ) -> None:
+        self._device = device
+        if self._device is None:
+            self._device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self._processor = BlipProcessor.from_pretrained(model_name)
+        self._model = BlipForConditionalGeneration.from_pretrained(model_name).to(
+            device
+        )
+
+    def __call__(self, image_path: str) -> str:
+        image_obj = Image.open(image_path).convert("RGB")
+        inputs = self._processor(image_obj, return_tensors="pt").to(self._device)
+        output = self._model.generate(max_new_tokens=1024, **inputs)
+        return self._processor.decode(output[0], skip_special_tokens=True)
+
+
+image_describer = ImageDescriber(model_name="Salesforce/blip-image-captioning-base")
+
+
 class GraphState(TypedDict):
-    temperature: Optional[float] = None
+    temperature: Optional[float] = 0.5
+    is_local_image_detector: Optional[bool] = True
     uploaded_file_path: Optional[str] = None
     image_description: Optional[str] = None
     labels: Optional[List[str]] = None
@@ -74,6 +104,10 @@ class GraphState(TypedDict):
 
 def image_detector(state: GraphState) -> Dict[str, str]:
     """Detects objects in an image as much as possible and returns the description of the image."""
+    if state.get("is_local_image_detector"):
+        image_description = image_describer(state.get("uploaded_file_path"))
+        return {"image_description": image_description}
+
     with open(state.get("uploaded_file_path"), "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
         # pretty_print("base64_image", base64_image)
@@ -108,18 +142,16 @@ def coco_label_extractor(state: GraphState) -> str:
         [
             (
                 "system",
-                """As an helpful assistant you should extract COCO and ImageNet compatible labels from a image description. 
-                Try to extract labels as much as possible from the description and convert to COCO and ImageNet compatible labels.
+                """As a helpful assistant you should extract COCO compatible labels from a image description. 
+                Try to extract labels as much as possible from the description and convert to COCO compatible labels.
                 ONLY return the labels as a comma separated string without any instruction information,special characters,mathamatical symbols,or any other information.
                 """,
             ),
-            ("human", "Image description:\n{img_desc}"),
+            ("human", "{img_desc}"),
         ]
     )
     llm = Ollama(
-        base_url="http://localhost:11434",
-        model="gemma:2b-instruct",
-        temperature=0,
+        base_url="http://localhost:11434", model="gemma:2b-instruct", temperature=0
     )
 
     labels: str = (prompt | llm | LabelsOutputParser()).invoke(
@@ -131,8 +163,9 @@ def coco_label_extractor(state: GraphState) -> str:
 def annotate_image(state: GraphState) -> Results:
     """Annotate an image with classes (COCO dataset types)"""
     model = YOLO("yolov8s-world.pt")  # or select yolov8m/l-world.pt for different sizes
-    
+
     classes = state.get("labels")
+    pretty_print("classes", classes)
     if len(classes) > 0:
         model.set_classes(classes=classes)
 
@@ -208,7 +241,12 @@ def doc_uploader() -> StateGraph | None:
 
 
 def main():
-    st.sidebar.slider("Temperature", 0.0, 1.0, .5, key="temperature")
+    st.sidebar.slider("Temperature", 0.0, 1.0, 0.9, key="temperature")
+    st.sidebar.selectbox(
+        "True for BLIP local image detector, False for OpenAI GPT-4 Vision remote image detector",
+        [True, False],
+        key="is_local_image_detector",
+    )
     graph: StateGraph | None = doc_uploader()
     if graph is None:
         return
@@ -218,10 +256,18 @@ def main():
         {
             "uploaded_file_path": st.session_state["file_name"],
             "temperature": float(st.session_state["temperature"]),
+            "is_local_image_detector": bool(
+                st.session_state["is_local_image_detector"]
+            ),
         }
     )
     pretty_print("result", result)
+
     st.image(Image.open(result["output_image_path"]))
+    st.write("Image Description")
+    st.write(result["image_description"])
+    st.write("Labels")
+    st.write(result["labels"])
 
 
 if __name__ == "__main__":

@@ -241,9 +241,9 @@ def doc_uploader() -> StateGraph | None:
 
 
 def main():
-    st.sidebar.slider("Temperature", 0.0, 1.0, 0.9, key="temperature")
+    st.sidebar.slider("Temperature", 0.0, 1.0, 1., key="temperature")
     st.sidebar.selectbox(
-        "True for BLIP local image detector, False for OpenAI GPT-4 Vision remote image detector",
+        "True for BLIP (full local), False for OpenAI GPT-4 Vision (remote)",
         [True, False],
         key="is_local_image_detector",
     )
@@ -263,11 +263,14 @@ def main():
     )
     pretty_print("result", result)
 
-    st.image(Image.open(result["output_image_path"]))
-    st.write("Image Description")
-    st.write(result["image_description"])
-    st.write("Labels")
-    st.write(result["labels"])
+    cols = st.columns([1, 1])
+    with cols[0]:
+        st.image(Image.open(result["output_image_path"]))
+    with cols[1]:
+        st.write("### Image Description")
+        st.write(result["image_description"])
+        st.write("### Labels")
+        st.write(result["labels"])
 
 
 if __name__ == "__main__":

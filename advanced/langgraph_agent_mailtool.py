@@ -212,7 +212,7 @@ def create_graph() -> StateGraph:
 def main():
     langgraph_app = create_graph().compile()
     st.sidebar.text_input(
-        "Enter email", key="mailto", value="", type="password"
+        "mailto", key="mailto", value="", type="password"
     )
     image_dir = st.sidebar.text_input(
         "Enter the directory path to the images", value="assets/images/receipt"

@@ -20,6 +20,7 @@ from rich.pretty import pprint
 import re
 import streamlit as st
 from langchain_community.tools import BaseTool
+from langchain_groq import ChatGroq
 
 
 def pretty_print(title: str = None, content: str = None):
@@ -56,8 +57,8 @@ structured_output_parser = StructuredOutputParser.from_response_schemas(
         ),
     ]
 )
-
-model = ChatOpenAI(model="gpt-4-vision-preview", temperature=0, max_tokens=1024 * 2)
+vision_model = ChatOpenAI(model="gpt-4-vision-preview", temperature=0, max_tokens=1024 * 2)
+model = ChatGroq(model="mixtral-8x7b-32768", temperature=0, max_tokens=1024 * 2)
 
 
 agent = initialize_agent(
@@ -135,7 +136,7 @@ def read_receipt(state: StateGraph) -> Dict[str, str]:
             format_instructions=structured_output_parser.get_format_instructions()
         )
 
-        res = (prompt | model | StrOutputParser()).invoke(
+        res = (prompt | vision_model | StrOutputParser()).invoke(
             {"base64_image": base64_image}
         )
 

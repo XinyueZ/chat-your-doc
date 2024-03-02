@@ -105,7 +105,7 @@ class HyDERetriever(BaseRetriever):
         self.base_retriever = base_retriever
         self.hypo_gen_model = hypo_gen_model
         self.hypothesis_template = PromptTemplate(
-            """Write a hypothesis document about question as you can.
+            """Write a hypothetical document about question as you can.
 
             Only return the document content without any other information, ie. leading text, title text and so on.
             

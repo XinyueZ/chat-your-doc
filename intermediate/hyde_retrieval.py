@@ -60,19 +60,56 @@ hypo_gen_temperature = st.sidebar.slider(
     "Hypothesis generation LLM temperature",
     0.0,
     2.0,
-    1.5,
+    1.8,
     key="hypo_gen_temperature_slider",
 )
 
-llm: BaseLLM = Groq(model="mixtral-8x7b-32768", temperature=llm_temperature)
-hypo_gen_model: BaseLLM = Ollama(
-    model="gemma:2b-instruct", temperature=hypo_gen_temperature
+timeout = st.sidebar.slider("Timeout for Ollama model", 30, 240, 120, 30)
+model_map = {
+    "Groq Mixtral": "mixtral-8x7b-32768",
+    "Groq LLaMA2": "llama2-70b-4096",
+    "Ollama Mixtral": "mistral:latest",
+    "Ollama Llama2": "llama2:text",
+    "Ollama Gemma": "gemma:2b-instruct",
+}
+
+
+def model_selector(model_name: str, temperature: float) -> BaseLLM:
+    if model_name.startswith("Groq"):
+        return Groq(
+            model=model_map[model_name],
+            temperature=temperature,
+            timeout=timeout,
+        )
+    else:
+        return Ollama(
+            model=model_map[model_name],
+            temperature=temperature,
+            request_timeout=timeout,
+        )
+
+
+llm_selector = st.sidebar.selectbox(
+    "Select LLM for RAG",
+    model_map.keys(),
+    key="llm_selector",
 )
-translation_model: BaseLLM = Ollama(model="gemma:2b-instruct", temperature=0.0)
-# llm: BaseLLM = Ollama(model="gemma:2b-instruct", temperature=llm_temperature)
-# hypo_gen_model: BaseLLM = Groq(
-#     model="mixtral-8x7b-32768", temperature=hypo_gen_temperature
-# )
+llm: BaseLLM = model_selector(llm_selector, llm_temperature)
+
+hypo_gen_model_selector = st.sidebar.selectbox(
+    "Select hypothetical document generation model",
+    model_map.keys(),
+    key="hypo_gen_model_selector",
+)
+hypo_gen_model: BaseLLM = model_selector(hypo_gen_model_selector, hypo_gen_temperature)
+
+translation_model_selector = st.sidebar.selectbox(
+    "Select translation model",
+    model_map.keys(),
+    key="translation_model_selector",
+)
+translation_model: BaseLLM = model_selector(translation_model_selector, 0.0)
+
 # embs = OpenAIEmbedding(model=OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002)
 embs = "local:BAAI/bge-small-en-v1.5"
 
@@ -227,8 +264,12 @@ async def main():
 
         if st.session_state.get("translate_to_chinese", False):
             tasks = [
-                translation_model.acomplete(f"Translate the follwing text into Chinese:\n{final_res_str}"),
-                translation_model.acomplete(f"Translate the follwing text into Chinese:\n{hypo_doc}"),
+                translation_model.acomplete(
+                    f"Translate the follwing text into Chinese:\n{final_res_str}"
+                ),
+                translation_model.acomplete(
+                    f"Translate the follwing text into Chinese:\n{hypo_doc}"
+                ),
             ]
             res = await tqdm.gather(*tasks)
             final_res_str, hypo_doc = res[0].text.strip(), res[1].text.strip()

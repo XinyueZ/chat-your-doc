@@ -116,6 +116,10 @@ embs = "local:BAAI/bge-small-en-v1.5"
 st.session_state["translate_to_chinese"] = st.sidebar.checkbox(
     "Translate to Chinese", key="translate", value=False
 )
+st.session_state["use_updated_query"] = st.sidebar.checkbox(
+    "Update origin query with content", key="updated_query", value=False
+)
+
 # For debugging
 st.session_state["hypo_doc"] = None
 
@@ -166,7 +170,9 @@ class HyDERetriever(BaseRetriever):
         return await self.base_retriever.aretrieve(hypo_doc)
 
 
-def create_retriever(service_context: ServiceContext, file_path: str) -> BaseRetriever:
+def create_retriever(
+    service_context: ServiceContext, file_path: str
+) -> Tuple[BaseRetriever, BaseQueryEngine]:
     input_files: List[str] = [file_path]
     docs: SimpleDirectoryReader = SimpleDirectoryReader(
         input_files=input_files,
@@ -178,7 +184,9 @@ def create_retriever(service_context: ServiceContext, file_path: str) -> BaseRet
         show_progress=True,
     )
 
-    return vector_index.as_retriever()
+    retriever = vector_index.as_retriever()
+    query_engine = vector_index.as_query_engine()
+    return (retriever, query_engine)
 
 
 def create_query_engine(
@@ -205,7 +213,9 @@ def create_query_engine(
     )
 
 
-def doc_uploader(service_context: ServiceContext) -> Tuple[BaseRetriever] | None:
+def doc_uploader(
+    service_context: ServiceContext,
+) -> Tuple[BaseRetriever, BaseQueryEngine] | None:
     with st.sidebar:
         uploaded_doc = st.file_uploader(
             "# Upload one text content file", key="doc_uploader"
@@ -231,14 +241,14 @@ def doc_uploader(service_context: ServiceContext) -> Tuple[BaseRetriever] | None
 
                 if st.session_state.get("file_name") == file_name:
                     logger.debug("Same file, same quiries, no indexing needed")
-                    return st.session_state["retriever"]
+                    return st.session_state["retriever_and_query_engine"]
 
                 logger.debug("New file, new queries, indexing needed")
                 st.session_state["file_name"] = file_name
-                st.session_state["retriever"] = create_retriever(
+                st.session_state["retriever_and_query_engine"] = create_retriever(
                     service_context, temp_file_path
                 )
-                return st.session_state["retriever"]
+                return st.session_state["retriever_and_query_engine"]
         return None
 
 
@@ -247,9 +257,12 @@ async def main():
     st.sidebar.write(
         "[Suggest this file to ask some questions](https://dl.dropbox.com/scl/fi/xojn7rk5drda8ba4i90xr/4b1ca7c6-b279-4ed9-961a-484cadf8dd16.pdf?rlkey=aah3wklftddsgw7g5lrkv2tg4&dl=0)"
     )
-    retriever: BaseRetriever | None = doc_uploader(service_context)
-    if retriever is None:
+    retriever_and_query_engine: Tuple[BaseRetriever, BaseQueryEngine] | None = (
+        doc_uploader(service_context)
+    )
+    if retriever_and_query_engine is None:
         return
+    retriever, base_query_engine = retriever_and_query_engine
     query_engine = create_query_engine(service_context, retriever, hypo_gen_model)
     query_text = st.text_input(
         "Query",
@@ -257,7 +270,14 @@ async def main():
         placeholder="Enter your query here",
     )
 
-    if query_text is not None and query_text != "":
+    if st.button("query") and query_text is not None and query_text != "":
+        if st.session_state.get("use_updated_query", False):
+            prompt = """Restructure the following text for better model comprehension while maintaining the original sentiment and brevity:\n\n{origin_query}\n\n"""
+            updated_query: RESPONSE_TYPE = base_query_engine.query(
+                prompt.format(origin_query=query_text)
+            )
+            query_text = updated_query.response
+            pretty_print("Updated query", query_text)
         final_res: RESPONSE_TYPE = await query_engine.aquery(query_text)
         final_res_str: str = final_res.response
         hypo_doc = st.session_state["hypo_doc"]

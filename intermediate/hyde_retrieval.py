@@ -284,8 +284,9 @@ async def main():
             updated_query: RESPONSE_TYPE = base_query_engine.query(
                 prompt.format(origin_query=query_text)
             )
-            query_text = updated_query.response
-            pretty_print("Updated query", query_text)
+            query_text = updated_query.response.strip()
+            st.write("### Updated query")
+            st.write(query_text)
         final_res: RESPONSE_TYPE = await query_engine.aquery(query_text)
         final_res_str: str = final_res.response
         hypo_doc = st.session_state["hypo_doc"]

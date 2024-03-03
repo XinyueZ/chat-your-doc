@@ -263,13 +263,10 @@ async def main():
         hypo_doc = st.session_state["hypo_doc"]
 
         if st.session_state.get("translate_to_chinese", False):
+            prompt = "Translate the follwing text into Chinese, notice: only do translation, no additonal information or notice information is needed:\n\n{text}\n\n"
             tasks = [
-                translation_model.acomplete(
-                    f"Translate the follwing text into Chinese:\n{final_res_str}"
-                ),
-                translation_model.acomplete(
-                    f"Translate the follwing text into Chinese:\n{hypo_doc}"
-                ),
+                translation_model.acomplete(prompt.format(text=final_res_str)),
+                translation_model.acomplete(prompt.format(text=hypo_doc)),
             ]
             res = await tqdm.gather(*tasks)
             final_res_str, hypo_doc = res[0].text.strip(), res[1].text.strip()

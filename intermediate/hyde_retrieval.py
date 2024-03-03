@@ -272,7 +272,15 @@ async def main():
 
     if st.button("query") and query_text is not None and query_text != "":
         if st.session_state.get("use_updated_query", False):
-            prompt = """Restructure the following text for better model comprehension while maintaining the original sentiment and brevity:\n\n{origin_query}\n\n"""
+            prompt = """Generate a different version of the text inside [Origin text] marks to retrieve relevant documents from a vector database. 
+            The version is for better model comprehension while maintaining the original text sentiment and brevity.
+            Your goal is to help the user overcome some of the limitations of the distance-based similarity search. 
+            Notice: Only return the reformulated statement without any explaination or additional information.
+
+            [Origin text]
+            {origin_query}
+            [Origin text]
+            """
             updated_query: RESPONSE_TYPE = base_query_engine.query(
                 prompt.format(origin_query=query_text)
             )

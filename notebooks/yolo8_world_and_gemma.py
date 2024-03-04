@@ -1,4 +1,5 @@
 # %% Helper functions ##########################################################
+import os
 from typing import List
 from rich.pretty import pprint
 
@@ -173,6 +174,13 @@ from langchain.prompts import (
     FewShotPromptTemplate,
 )
 
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema.output_parser import StrOutputParser
+from langchain_community.llms.ollama import Ollama
+from langchain_groq import ChatGroq
+
+os.environ["LANGCHAIN_PROJECT"] = "gemma-based-app"
+
 examples = [
     {
         "img_desc": """The image shows two individuals, an adult and a child, standing on a sandy beach near 
@@ -216,6 +224,7 @@ final_prompt = ChatPromptTemplate.from_messages(
             "system",
             """Extract COCO defined labels from the image description.
             Provide the result ONLY as a simple list separated by commas.
+
             """,
         ),
         few_shot_prompt,
@@ -228,15 +237,55 @@ print(
     )
 )
 
-# %% Try gemma vision possible (sad, it cannot) ##########################################################
+# model = Ollama(
+#         base_url="http://localhost:11434",
+#         model="gemma:2b-instruct",
+#         temperature=0,
+#         top_k=3,
+#     )
+
+model = ChatGroq(model_name="mixtral-8x7b-32768", temperature=0.0)
+
+res = (final_prompt | model | StrOutputParser()).invoke(
+    {
+        "img_desc": """The image shows two persons, one adult and one child, standing on a sandy beach near the water's edge. 
+             The adult appears to be looking down towards the child, who is facing them. 
+             The child is wearing a pink dress and the adult is dressed in dark clothing. 
+             It looks like a peaceful scene, possibly a family moment, with the calm water in the background and a gentle interaction between the two.
+             
+             """
+    }
+)
+
+pretty_print("res", res)
+
+# %% Try gemma or mixtral vision possible (sad, it cannot) ##########################################################
+import base64
+
+from langchain.prompts import (
+    PromptTemplate,
+    FewShotChatMessagePromptTemplate,
+    ChatPromptTemplate,
+    FewShotPromptTemplate,
+)
+from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage
+from langchain_community.llms.ollama import Ollama
+from langchain.schema.output_parser import StrOutputParser
+from langchain_community.chat_models import ChatOpenAI
+
 with open("tmp/xmasroom.jpeg", "rb") as image_file:
     base64_image = base64.b64encode(image_file.read()).decode("utf-8")
     # pretty_print("base64_image", base64_image)
     prompt = ChatPromptTemplate.from_messages(
         [
+            (
+                "system",
+                """As a helpful assistant you should tell me what the content the image has".
+                """,
+            ),
             HumanMessage(
                 content=[
-                    {"type": "text", "text": "What is this image showing"},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -244,14 +293,33 @@ with open("tmp/xmasroom.jpeg", "rb") as image_file:
                         },
                     },
                 ]
-            )
+            ),
         ]
     )
-    chat = Ollama(
-        base_url="http://localhost:11434",
-        model="gemma:2b-instruct",
-        temperature=0,
-        top_k=3,
+    # model = ChatOpenAI(
+    #     model="gpt-4-vision-preview",
+    #     temperature=0,
+    #     max_tokens=1024 * 2,
+    # )
+    model = ChatGroq(
+        model_name="mixtral-8x7b-32768",
+        temperature=0.0,
     )
-    res = (prompt | chat | StrOutputParser()).invoke({"base64_image": base64_image})
+    # model = Ollama(
+    #     base_url="http://localhost:11434",
+    #     model="gemma:2b-instruct",
+    #     temperature=0,
+    #     top_k=3,
+    # )
+    # model = Ollama(
+    #     base_url="http://localhost:11434",
+    #     model="llava",
+    #     temperature=0,
+    # )
+    model.bind(images=[base64_image])
+    #res = model.invoke("what is the image showing?")
+    res = (prompt | model | StrOutputParser()).invoke({})
+    # res = (prompt | model | StrOutputParser()).invoke({"base64_image": base64_image})
     pretty_print("res", res)
+
+# %%

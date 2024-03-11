@@ -15,8 +15,7 @@ Chat Your Doc is an experimental project aimed at exploring various applications
   - [Simple](#simple)
   - [Intermediate](#intermediate)
   - [Advanced](#advanced)
-- [Notebooks](#notebooks)
-- [Notes](#notes)
+- [Notebooks](#notebooks) 
 
 ----
 # Setup

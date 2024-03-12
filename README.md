@@ -125,6 +125,10 @@ Chroma, FAISS
 
 > Hypothetical Document Embeddings, two-steps process of RAG. Implementation of [HyDE](https://arxiv.org/pdf/2212.10496.pdf) retrieval by  [LlamaIndex](https://www.llamaindex.ai/), hybrid, local or remote LLMs.
 
+[LangChain: Use LLM Agent for World GPU Demand Prediction Report](https://medium.com/@teetracker/langchain-use-llm-agent-for-world-gpu-supply-and-demand-analysis-report-52f93f7bc8e8)
+
+> Reflecting the analytical methods of the AI era, based on the Agent mechanism and generative AI, intelligently generates necessary information and code.
+
 ## Simple
 
 | App | Description | Launch | Demo |

@@ -29,7 +29,11 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
-from operator import itemgetter
+
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnablePassthrough,
+)
 
 os.environ["LANGCHAIN_PROJECT"] = "nvidia_vs_groq"  # langsmith open
 
@@ -103,7 +107,7 @@ Only return the final standalone question."""
             ),
             MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template(
-                "<Documents>{question}</Documents>"
+                "<Question>{question}</Question>"
             ),
         ]
     )
@@ -124,10 +128,10 @@ def create_chain(
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "Answer solely based on the following context:\n<Documents>\n{context}\n</Documents>"
+                "Answer question solely based on the following context:\n<Documents>\n{context}\n</Documents>"
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template("{question}"),
+            HumanMessagePromptTemplate.from_template("</Question>{question}</Question>"),
         ]
     )
 

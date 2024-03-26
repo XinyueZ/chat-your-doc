@@ -106,13 +106,11 @@ Do NOT answer the question, just reformulate it if needed, otherwise return it a
 Only return the final standalone question."""
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template(
-                "<Question>{question}</Question>"
-            ),
+            HumanMessagePromptTemplate.from_template("<Question>{question}</Question>"),
         ]
     )
 
-    return prompt | llm
+    return prompt | llm | StrOutputParser()
 
 
 st.session_state["history"] = (
@@ -131,14 +129,14 @@ def create_chain(
                 "Answer question solely based on the following context:\n<Documents>\n{context}\n</Documents>"
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template("</Question>{question}</Question>"),
+            HumanMessagePromptTemplate.from_template(
+                "</Question>{question}</Question>"
+            ),
         ]
     )
 
     chain = (
-        RunnablePassthrough.assign(
-            context=standalone_question_chain() | StrOutputParser() | base_retriever
-        )
+        RunnablePassthrough.assign(context=standalone_question_chain() | base_retriever)
         | prompt
         | llm
         | StrOutputParser()
@@ -150,7 +148,7 @@ def create_chain(
         input_messages_key="question",
         history_messages_key="history",
     )
-    return final_chain
+    return final_chain | StrOutputParser()
 
 
 def doc_uploader() -> BaseRetriever | None:
@@ -203,7 +201,7 @@ def main():
 
     if question is not None and question != "":
         chain = create_chain(base_retriever=retriever)
-        response = (chain | StrOutputParser()).stream(
+        response = chain.stream(
             {"question": question},
             {"configurable": {"session_id": None}},
         )

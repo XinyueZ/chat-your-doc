@@ -1,3 +1,4 @@
+from multiprocessing import context
 import os
 from typing import Any, List, Tuple
 
@@ -92,23 +93,34 @@ def create_retriever(file_path: str) -> BaseRetriever:
     return db.as_retriever()
 
 
-def refine_question() -> RunnableSerializable:
+def standalone_question_chain() -> RunnableSerializable:
     prompt = ChatPromptTemplate.from_messages(
         [
-            SystemMessage(
-                content="""Given a context of document <Documents>{context}</Documents> and chat history and a follow-up question, rephrase the follow-up question to be a standalone question. \
+            SystemMessagePromptTemplate.from_template(
+                """Given a chat history and a follow-up question, rephrase the follow-up question to be a standalone question. \
 Do NOT answer the question, just reformulate it if needed, otherwise return it as is.
 Only return the final standalone question."""
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessage(content="{question}"),
+            HumanMessagePromptTemplate.from_template(
+                "<Documents>{question}</Documents>"
+            ),
         ]
     )
 
-    return prompt | llm | StrOutputParser()
+    return prompt | llm
 
 
-def create_chain() -> Tuple[RunnableSerializable, ChatMessageHistory]:
+st.session_state["history"] = (
+    ChatMessageHistory()
+    if "history" not in st.session_state
+    else st.session_state["history"]
+)
+
+
+def create_chain(
+    base_retriever: BaseRetriever,
+) -> RunnableSerializable:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
@@ -119,16 +131,22 @@ def create_chain() -> Tuple[RunnableSerializable, ChatMessageHistory]:
         ]
     )
 
-    chain = prompt | llm | StrOutputParser()
+    chain = (
+        RunnablePassthrough.assign(
+            context=standalone_question_chain() | StrOutputParser() | base_retriever
+        )
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
 
-    final_history = ChatMessageHistory()
     final_chain = RunnableWithMessageHistory(
         chain,
-        lambda _: final_history,
+        lambda _: st.session_state["history"],
         input_messages_key="question",
         history_messages_key="history",
     )
-    return final_chain, final_history
+    return final_chain
 
 
 def doc_uploader() -> BaseRetriever | None:
@@ -180,17 +198,14 @@ def main():
     )
 
     if question is not None and question != "":
-        chain, history = create_chain()
+        chain = create_chain(base_retriever=retriever)
         response = (chain | StrOutputParser()).stream(
-            {
-                "question": question,
-                "context": retriever.invoke(question),
-            },
+            {"question": question},
             {"configurable": {"session_id": None}},
         )
         st.write_stream(response)
         st.sidebar.write("History")
-        st.sidebar.write(history.messages)
+        st.sidebar.write(st.session_state["history"].messages)
 
 
 if __name__ == "__main__":

@@ -130,10 +130,10 @@ def hyde_chain() -> RunnableSerializable:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                """Generate a different version of the text inside [Origin text] marks and conversation history to retrieve relevant documents from a vector database.
+                """Generate a different version of the text inside [Origin text] marks with the help of conversation history to retrieve relevant documents from a vector storage.
 The version is for better model comprehension while maintaining the original text sentiment and brevity.
 Your goal is to help the user overcome some of the limitations of the distance-based similarity search. 
-Notice: Only return the reformulated statement without any explaination or additional information."""
+Notice: Only return the reformulated statement without any instruction text, reasoning text, headlines, leading-text or other additional information."""
             ),
             MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template(
@@ -151,7 +151,7 @@ def standalone_query_chain() -> RunnableSerializable:
             SystemMessagePromptTemplate.from_template(
                 """Given a conversation history and a follow-up query inside [Query] marks, rephrase the follow-up query to be a standalone query. \
 Do NOT answer the query, just reformulate it if needed, otherwise return it as is.
-Notice: Only return the final standalone query without any instruction text, headlines, leading-text or other additional information."""
+Notice: Only return the final standalone query as simple as possible without any instruction text, headlines, leading-text or other additional information."""
             ),
             MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template("[Query]{query}[Query]"),
@@ -242,7 +242,7 @@ def doc_uploader() -> BaseRetriever | None:
 def main():
     st.sidebar.title("Upload file")
     st.sidebar.write(
-        "[Suggest this file to query](https://dl.dropbox.com/scl/fi/xojn7rk5drda8ba4i90xr/4b1ca7c6-b279-4ed9-961a-484cadf8dd16.pdf?rlkey=aah3wklftddsgw7g5lrkv2tg4&dl=0)"
+        "[Suggest this file to query](https://dl.dropbox.com/scl/fi/boxb3mvc0mv7d7tndmy0j/BAIDU-INC.-CODE-OF-BUSINESS-CONDUCT-AND-ETHICS.pdf?rlkey=gs378jtvi6gwzy0ncn0jx0876)"
     )
     retriever: BaseRetriever | None = doc_uploader()
     if retriever is None:

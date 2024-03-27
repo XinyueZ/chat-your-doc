@@ -149,7 +149,7 @@ def standalone_query_chain() -> RunnableSerializable:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                """Given a chat history and a follow-up query inside [Query] marks, rephrase the follow-up query to be a standalone query. \
+                """Given a conversation history and a follow-up query inside [Query] marks, rephrase the follow-up query to be a standalone query. \
 Do NOT answer the query, just reformulate it if needed, otherwise return it as is.
 Notice: Only return the final standalone query without any instruction text, headlines, leading-text or other additional information."""
             ),

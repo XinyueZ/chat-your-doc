@@ -1,39 +1,29 @@
-from multiprocessing import context
 import os
-from typing import Any, List, Tuple
+from typing import Any, List, Literal
 
 import streamlit as st
-from langchain.document_loaders import PyPDFLoader, UnstructuredPDFLoader
-from langchain.schema.output_parser import StrOutputParser
-from langchain.text_splitter import SentenceTransformersTokenTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_core.language_models import BaseChatModel
-from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_core.retrievers import BaseRetriever
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.runnables.base import RunnableSerializable
-from langchain_groq import ChatGroq
-from langchain_nvidia_ai_endpoints import ChatNVIDIA, NVIDIAEmbeddings
-from loguru import logger
-from rich.pretty import pprint
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain.prompts import MessagesPlaceholder
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnablePassthrough,
-)
+from langchain.document_loaders import UnstructuredPDFLoader
 from langchain.memory import ChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.prompts import (
     HumanMessagePromptTemplate,
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
+from langchain.schema.output_parser import StrOutputParser
+from langchain.text_splitter import SentenceTransformersTokenTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_core.language_models import BaseChatModel
+from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.runnables import RunnablePassthrough, chain
+from langchain_core.runnables.base import RunnableSerializable
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_groq import ChatGroq
+from langchain_nvidia_ai_endpoints import ChatNVIDIA, NVIDIAEmbeddings
 
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnablePassthrough,
-)
+from loguru import logger
+from rich.pretty import pprint
 
 os.environ["LANGCHAIN_PROJECT"] = "nvidia_vs_groq"  # langsmith open
 
@@ -46,13 +36,19 @@ def pretty_print(title: str = None, content: Any = None):
     pprint(content)
 
 
+st.session_state["history"] = (
+    ChatMessageHistory()
+    if "history" not in st.session_state
+    else st.session_state["history"]
+)
+
 embedding = NVIDIAEmbeddings(model="nvolveqa_40k")
 
 model_map = {
     "Groq Mixtral": "mixtral-8x7b-32768",
     "Groq LLaMA2": "llama2-70b-4096",
     "Nvidia Mixtral": "mixtral_8x7b",
-    "Nvidia Llama2": "llama-2",
+    "Nvidia Llama2": "llama2_70b",
 }
 
 llm_temperature = st.sidebar.slider(
@@ -84,6 +80,7 @@ def llm_selector(model_name: str) -> BaseChatModel:
 llm_name_selector = st.sidebar.selectbox(
     "Select LLM for RAG",
     model_map.keys(),
+    index=2,
     key="llm_selector",
 )
 llm = llm_selector(llm_name_selector)
@@ -97,27 +94,68 @@ def create_retriever(file_path: str) -> BaseRetriever:
     return db.as_retriever()
 
 
-def standalone_question_chain() -> RunnableSerializable:
+def router_chain() -> RunnableSerializable:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                """Given a chat history and a follow-up question, rephrase the follow-up question to be a standalone question. \
-Do NOT answer the question, just reformulate it if needed, otherwise return it as is.
-Only return the final standalone question."""
+                """Given a conversation history to decide what next-step will follow, "standardalonequestion"  or "summary".
+"standardalonequestion" if the conversation is just started.
+"summary" if the conversation is ongoing (more than one interaction between the human and the AI).
+Notice: Only return eithter "standardalonequestion" or "summary" without any instruction text, reasoning text, headlines, leading-text or other additional information.
+"""
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template("<Question>{question}</Question>"),
+            HumanMessagePromptTemplate.from_template(
+                """What is the next step? (standardalonequestion or summary) and what is the conversation about based on history?"""
+            ),
         ]
     )
 
     return prompt | llm | StrOutputParser()
 
 
-st.session_state["history"] = (
-    ChatMessageHistory()
-    if "history" not in st.session_state
-    else st.session_state["history"]
-)
+def summary_chain() -> RunnableSerializable:
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                """Given a chat history and a follow-up question. Summerize the conversation based on the chat history and the follow-up question.
+If the history is empty, do nothing just return the follow-up question as the summary.
+Notice: Only return the final summary without any instruction text, headlines, leading-text or other additional information."""
+            ),
+            MessagesPlaceholder(variable_name="history"),
+            HumanMessagePromptTemplate.from_template("{question}"),
+        ]
+    )
+
+    return prompt | llm | StrOutputParser()
+
+
+def standalone_question_chain() -> RunnableSerializable:
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                """Given a chat history and a follow-up question, rephrase the follow-up question to be a standalone question. \
+Do NOT answer the question, just reformulate it if needed, otherwise return it as is.
+Notice: Only return the final standalone question without any instruction text, headlines, leading-text or other additional information."""
+            ),
+            MessagesPlaceholder(variable_name="history"),
+            HumanMessagePromptTemplate.from_template("{question}"),
+        ]
+    )
+
+    return prompt | llm | StrOutputParser()
+
+
+@chain
+def route(info) -> RunnableSerializable:
+    pretty_print("info", info)
+    if "standardalonequestion" in info["next_step"]:
+        pretty_print("standalone_question_chain", info["next_step"])
+        return standalone_question_chain()
+
+    if "summary" in info["next_step"]:
+        pretty_print("summary", info["next_step"])
+        return summary_chain()
 
 
 def create_chain(
@@ -126,24 +164,24 @@ def create_chain(
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "Answer question solely based on the following context:\n<Documents>\n{context}\n</Documents>"
+                "Answer question solely based on the following context:\n{context}\n"
             ),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template(
-                "</Question>{question}</Question>"
-            ),
+            HumanMessagePromptTemplate.from_template("{question}"),
         ]
     )
-
-    chain = (
-        RunnablePassthrough.assign(context=standalone_question_chain() | base_retriever)
+    # RunnablePassthrough.assign(context=standalone_question_chain() | base_retriever)
+    # RunnablePassthrough.assign(context=summary_chain() | base_retriever)
+    mid_chain = (
+        RunnablePassthrough.assign(next_step=router_chain())
+        | RunnablePassthrough.assign(context=(route | base_retriever))
         | prompt
         | llm
         | StrOutputParser()
     )
 
     final_chain = RunnableWithMessageHistory(
-        chain,
+        mid_chain,
         lambda _: st.session_state["history"],
         input_messages_key="question",
         history_messages_key="history",
@@ -180,6 +218,7 @@ def doc_uploader() -> BaseRetriever | None:
                     return st.session_state["retriever"]
 
                 logger.debug("New file, new queries, indexing needed")
+                st.session_state["file_name"] = file_name
                 st.session_state["retriever"] = create_retriever(temp_file_path)
                 return st.session_state["retriever"]
         return None
@@ -197,11 +236,11 @@ def main():
         "Question",
         key="question",
         placeholder="Enter your question here",
-    )
+    ).strip()
 
     if question is not None and question != "":
-        chain = create_chain(base_retriever=retriever)
-        response = chain.stream(
+        final_chain = create_chain(base_retriever=retriever)
+        response = final_chain.stream(
             {"question": question},
             {"configurable": {"session_id": None}},
         )

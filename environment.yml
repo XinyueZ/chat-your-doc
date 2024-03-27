@@ -7,7 +7,6 @@ dependencies:
   - libffi=3.4.4=hecd8cb5_0
   - ncurses=6.4=hcec6c5f_0
   - openssl=3.0.12=hca72f7f_0
-  - pip=23.3.1=py311hecd8cb5_0
   - python=3.11.5=hf27a42d_0
   - readline=8.2=hca72f7f_0
   - sqlite=3.41.2=h6c40b1e_0
@@ -23,9 +22,12 @@ dependencies:
       - aiosignal==1.3.1
       - altair==5.1.1
       - annotated-types==0.6.0
+      - anthropic==0.19.1
       - antlr4-python3-runtime==4.9.3
       - anyio==3.7.1
+      - appdirs==1.4.4
       - appnope==0.1.3
+      - arxiv==2.1.0
       - asgiref==3.7.2
       - asttokens==2.2.1
       - async-timeout==4.0.2
@@ -38,14 +40,15 @@ dependencies:
       - blinker==1.6.2
       - brotli==1.0.9
       - bs4==0.0.2
+      - build==1.1.1
       - cachetools==5.3.1
       - certifi==2023.7.22
       - cffi==1.15.1
       - chardet==5.2.0
-      - charset-normalizer==2.0.12
+      - charset-normalizer==3.3.2
       - chroma==0.2.0
-      - chroma-hnswlib==0.7.1
-      - chromadb==0.4.3
+      - chroma-hnswlib==0.7.3
+      - chromadb==0.4.24
       - click==8.1.7
       - clip==1.0
       - cohere==4.45
@@ -55,16 +58,20 @@ dependencies:
       - contourpy==1.1.0
       - cryptography==36.0.2
       - csv-agent==0.0.1
+      - curl-cffi==0.6.2
       - cycler==0.11.0
-      - dataclasses-json==0.5.14
+      - dataclasses-json==0.6.4
       - datasets==2.14.5
       - debugpy==1.6.7
       - decorator==5.1.1
+      - deepdiff==6.7.1
+      - defusedxml==0.7.1
       - deprecated==1.2.14
       - dill==0.3.7
       - dirtyjson==1.0.8
       - distro==1.8.0
       - docarray==0.32.1
+      - duckduckgo-search==5.0
       - effdet==0.4.1
       - emoji==2.8.0
       - et-xmlfile==1.1.0
@@ -73,10 +80,12 @@ dependencies:
       - faiss-cpu==1.7.4
       - fastapi==0.99.1
       - fastavro==1.9.3
+      - feedparser==6.0.10
       - filelock==3.12.2
       - filetype==1.2.0
       - flatbuffers==23.5.26
       - fonttools==4.41.1
+      - frozendict==2.4.0
       - frozenlist==1.4.0
       - fsspec==2023.6.0
       - ftfy==6.1.3
@@ -91,7 +100,7 @@ dependencies:
       - google-generativeai==0.3.2
       - google-search-results==2.4.2
       - googleapis-common-protos==1.61.0
-      - greenlet==2.0.2
+      - greenlet==3.0.3
       - groq==0.4.1
       - groundingdino==0.1.0
       - grpcio==1.60.1
@@ -102,6 +111,7 @@ dependencies:
       - hnswlib==0.8.0
       - hpack==4.0.0
       - html2text==2020.1.16
+      - html5lib==1.1
       - httpcore==1.0.2
       - httplib2==0.22.0
       - httptools==0.6.0
@@ -122,6 +132,7 @@ dependencies:
       - jinja2==3.1.2
       - joblib==1.3.1
       - jsonpatch==1.33
+      - jsonpath-python==1.0.6
       - jsonpointer==2.4
       - jsonschema==4.19.0
       - jsonschema-specifications==2023.7.1
@@ -130,37 +141,42 @@ dependencies:
       - kiwisolver==1.4.4
       - kornia==0.6.12
       - kubernetes==28.1.0
-      - landingai==0.2.13
-      - langchain==0.1.9
+      - landingai==0.3.32
+      - langchain==0.1.11
+      - langchain-anthropic==0.1.4
       - langchain-cli==0.0.19
-      - langchain-community==0.0.24
-      - langchain-core==0.1.26
+      - langchain-community==0.0.27
+      - langchain-core==0.1.30
       - langchain-experimental==0.0.52
       - langchain-groq==0.0.1
-      - langchain-openai==0.0.7
-      - langchainhub==0.1.14
+      - langchain-nvidia-ai-endpoints==0.0.4
+      - langchain-openai==0.0.8
+      - langchain-text-splitters==0.0.1
+      - langchainhub==0.1.15
       - langdetect==1.0.9
       - langgraph==0.0.12
       - langserve==0.0.32
-      - langsmith==0.1.8
+      - langsmith==0.1.23
       - lark==1.1.9
       - layoutparser==0.3.4
       - llama-index==0.10.5
-      - llama-index-agent-openai==0.1.1
-      - llama-index-core==0.10.5
-      - llama-index-embeddings-huggingface==0.1.1
-      - llama-index-embeddings-openai==0.1.1
+      - llama-index-agent-openai==0.1.5
+      - llama-index-core==0.10.15
+      - llama-index-embeddings-huggingface==0.1.4
+      - llama-index-embeddings-openai==0.1.6
       - llama-index-legacy==0.9.48
       - llama-index-llms-groq==0.1.3
       - llama-index-llms-ollama==0.1.2
-      - llama-index-llms-openai==0.1.2
+      - llama-index-llms-openai==0.1.7
       - llama-index-llms-openai-like==0.1.3
-      - llama-index-multi-modal-llms-openai==0.1.1
-      - llama-index-program-openai==0.1.1
-      - llama-index-question-gen-openai==0.1.1
-      - llama-index-readers-file==0.1.3
+      - llama-index-multi-modal-llms-openai==0.1.4
+      - llama-index-program-openai==0.1.4
+      - llama-index-question-gen-openai==0.1.3
+      - llama-index-readers-file==0.1.6
+      - llamaindex-py-client==0.1.13
+      - llvmlite==0.42.0
       - loguru==0.7.0
-      - lxml==4.9.3
+      - lxml==5.1.0
       - markdown==3.4.4
       - markdown-it-py==3.0.0
       - markupsafe==2.1.3
@@ -168,6 +184,7 @@ dependencies:
       - matplotlib==3.7.2
       - matplotlib-inline==0.1.6
       - mdurl==0.1.2
+      - mediawikiapi==1.2
       - mistralai==0.1.3
       - mmh3==4.0.1
       - monotonic==1.6
@@ -175,11 +192,13 @@ dependencies:
       - msg-parser==1.2.0
       - multidict==6.0.4
       - multiprocess==0.70.15
+      - multitasking==0.0.11
       - mutagen==1.47.0
       - mypy-extensions==1.0.0
       - nest-asyncio==1.5.8
       - networkx==3.1
       - nltk==3.8.1
+      - numba==0.59.0
       - numexpr==2.8.5
       - numpy==1.25.2
       - oauthlib==3.2.2
@@ -188,7 +207,7 @@ dependencies:
       - onnx==1.15.0
       - onnxruntime==1.15.1
       - openai==1.12.0
-      - opencv-python==4.8.0.74
+      - opencv-python==4.9.0.80
       - opencv-python-headless==4.8.0.74
       - openpyxl==3.1.2
       - opentelemetry-api==1.21.0
@@ -201,21 +220,26 @@ dependencies:
       - opentelemetry-sdk==1.21.0
       - opentelemetry-semantic-conventions==0.42b0
       - opentelemetry-util-http==0.42b0
+      - ordered-set==4.1.0
       - orjson==3.9.15
       - overrides==7.4.0
       - packaging==23.2
       - panda==0.3.1
-      - pandas==2.2.1
+      - pandas==2.0.0
       - parso==0.8.3
       - pdf2image==1.16.3
       - pdfminer-six==20221105
       - pdfplumber==0.10.3
+      - peewee==3.17.1
       - pexpect==4.8.0
       - pickleshare==0.7.5
       - pikepdf==8.8.0
       - pillow==10.1.0
+      - pillow-heif==0.15.0
       - pinecone-client==3.0.2
+      - pip==24.0
       - platformdirs==3.10.0
+      - playwright==1.42.0
       - ply==3.11
       - portalocker==2.8.2
       - posthog==3.0.2
@@ -234,18 +258,21 @@ dependencies:
       - pycocotools==2.0.7
       - pycparser==2.21
       - pycryptodome==3.18.0
-      - pydantic==2.6.3
+      - pydantic==1.10.14
       - pydantic-core==2.16.3
       - pydeck==0.8.0
+      - pyee==11.0.1
       - pygments==2.15.1
       - pympler==1.0.1
       - pymupdf==1.23.22
       - pymupdfb==1.23.22
+      - pynndescent==0.5.11
       - pypandoc==1.12
       - pyparsing==3.0.9
       - pypdf==4.0.1
       - pypdfium2==4.24.0
       - pypika==0.48.9
+      - pyproject-hooks==1.0.0
       - pytesseract==0.3.10
       - python-dateutil==2.8.2
       - python-docx==1.1.0
@@ -267,14 +294,16 @@ dependencies:
       - rich==13.5.2
       - rpds-py==0.10.0
       - rsa==4.9
+      - ruff==0.1.15
       - safetensors==0.4.1
-      - scikit-learn==1.3.0
+      - scikit-learn==1.4.1.post1
       - scipy==1.11.1
       - seaborn==0.13.2
       - segmentation-mask-overlay==0.3.4
       - sentence-transformers==2.3.1
       - sentencepiece==0.1.99
       - setuptools==69.0.2
+      - sgmllib3k==1.0.0
       - shellingham==1.5.4
       - six==1.16.0
       - smmap==5.0.0
@@ -312,27 +341,33 @@ dependencies:
       - tree-sitter==0.20.4
       - tree-sitter-languages==1.9.1
       - typer==0.9.0
-      - types-requests==2.31.0.10
+      - types-requests==2.31.0.6
+      - types-urllib3==1.26.25.14
       - typing-extensions==4.9.0
       - typing-inspect==0.9.0
       - tzdata==2023.3
       - tzlocal==4.3.1
       - ultralytics==8.1.14
-      - unstructured==0.11.2
-      - unstructured-inference==0.7.15
+      - umap-learn==0.5.5
+      - unstructured==0.12.5
+      - unstructured-client==0.21.1
+      - unstructured-inference==0.7.24
       - unstructured-pytesseract==0.3.12
       - update==0.0.1
       - uritemplate==4.1.1
-      - urllib3==2.2.1
+      - urllib3==1.26.18
       - uvicorn==0.23.2
       - uvloop==0.17.0
       - validators==0.21.2
       - watchdog==3.0.0
       - watchfiles==0.20.0
       - wcwidth==0.2.13
+      - webencodings==0.5.1
       - websocket-client==1.7.0
       - websockets==11.0.3
       - werkzeug==2.3.6
+      - wikibase-rest-api-client==0.1.3
+      - wikipedia==1.4.0
       - wine-price-app==0.1.0
       - wrapt==1.16.0
       - wxpython==4.2.1
@@ -341,5 +376,6 @@ dependencies:
       - xxhash==3.3.0
       - yapf==0.40.2
       - yarl==1.9.3
+      - yfinance==0.2.37
       - zipp==3.17.0
 prefix: /Users/zxy/anaconda3/envs/machinelearning

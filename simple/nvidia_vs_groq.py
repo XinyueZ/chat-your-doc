@@ -165,7 +165,7 @@ def build_final_chain(
     base_retriever: BaseRetriever,
 ) -> RunnableSerializable:
     @chain
-    def _routed_chain_(info) -> RunnableSerializable:
+    def _routing_chain_(info) -> RunnableSerializable:
         pretty_print("info", info)
         if "standardalonequery" in info["next_step"].lower():
             pretty_print("standalone_query_chain")
@@ -189,7 +189,7 @@ def build_final_chain(
 
     mid_chain = (
         RunnablePassthrough.assign(next_step=route_chain())
-        | RunnablePassthrough.assign(context=(_routed_chain_ | base_retriever))
+        | RunnablePassthrough.assign(context=(_routing_chain_ | base_retriever))
         | prompt
         | llm
         | StrOutputParser()

@@ -180,7 +180,7 @@ def build_final_chain(
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "Answer query inside [Query] marks solely based on the following context:\n{context}\n"
+                "Answer query inside [Query] marks solely based on the following context:\n{context}\n and conversation history."
             ),
             MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template("[Query]{query}[Query]"),

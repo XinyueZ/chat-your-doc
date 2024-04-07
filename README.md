@@ -137,6 +137,10 @@ Chroma, FAISS
 
 > Using LLM to predict the routing of the chain and achieve Retrieval Augmented Generation with help of conversation history applying HyDE or refined standalone query. 
 
+[LangChain: Multi-User Conversation Support(Follow-up)](https://teetracker.medium.com/langchain-multi-user-conversation-follow-up-9cc277eb445f)
+
+> A follow-up read: Use Cohere’s documents and a special field in additional_kwargsfeature to enhance the organization of information in multi-user discussions.
+
 ## Simple
 
 | App | Description | Launch | Demo |
@@ -201,5 +205,5 @@ Chroma, FAISS
 | [langchain_agent_gmail.ipynb](notebooks/langchain_agent_gmail.ipynb)  |  Use LangGraph to driven a Email deliever of the custom receipts. |   ![](assets/guide/langgraph_agent_mailtool.jpg)   ![](assets/screens/langgraph_agent_mailtool.gif)  | 
 | [hyde_retrieval.ipynb](notebooks/hyde_retrieval.ipynb)  | Implementation of [HyDE](https://arxiv.org/pdf/2212.10496.pdf) retrieval by  [LlamaIndex](https://www.llamaindex.ai/), hybrid, local or remote LLMs. | [read](https://teetracker.medium.com/rag-with-hypothetical-document-embeddings-hyde-0edeca23f891)  ![](assets/guide/hyde_retrieval.jpg)   ![](hyde_retrieval.png)  ![](assets/screens/hyde_retrieval.gif)    | 
 | [agent_gpu_demand_prediction.ipynb](notebooks/agent_gpu_demand_prediction.ipynb)  | Use pure Agent (LangChain) to generate a report paper of global GPU demand prediction. | [read](https://medium.com/@teetracker/langchain-use-llm-agent-for-world-gpu-supply-and-demand-analysis-report-52f93f7bc8e8),![](assets/guide/agent_gpu_demand_prediction_1.webp),![](assets/guide/agent_gpu_demand_prediction_2.webp) | 
-| [multi_user_conversation.ipynb](notebooks/multi_user_conversation.ipynb)  | Try to do multi-user chat with LangChain, `ConversationBufferMemory`, `ConversationChain`, `RunnableWithMessageHistory`, `ChatMessageHistory`, `convert_openai_messages` and LCEL | [read](https://medium.com/@teetracker/langchain-multi-user-conversation-1ea1c8671e33) | 
+| [multi_user_conversation.ipynb](notebooks/multi_user_conversation.ipynb)  | Try to do multi-user chat with LangChain, `ConversationBufferMemory`, `ConversationChain`, `RunnableWithMessageHistory`, `ChatMessageHistory`, `convert_openai_messages` and LCEL | [read](https://medium.com/@teetracker/langchain-multi-user-conversation-1ea1c8671e33) [read (Follow-up)](https://teetracker.medium.com/langchain-multi-user-conversation-follow-up-9cc277eb445f)| 
 | [DenseXRetrieval.ipynb](notebooks/DenseXRetrieval.ipynb)  | [Dense X Retrieval: What Retrieval Granularity Should We Use?](https://arxiv.org/abs/2312.06648) by using [Llama Packs](https://docs.llamaindex.ai/en/latest/community/llama_packs/) | | 

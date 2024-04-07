@@ -139,7 +139,7 @@ Chroma, FAISS
 
 [LangChain: Multi-User Conversation Support(Follow-up)](https://teetracker.medium.com/langchain-multi-user-conversation-follow-up-9cc277eb445f)
 
-> A follow-up read: Use Cohere’s documents and a special field in additional_kwargsfeature to enhance the organization of information in multi-user discussions.
+> A follow-up read: Use Cohere’s documents and a special field in additional_kwargsfeature to enhance the organization of information in multi-user conversation.
 
 ## Simple
 

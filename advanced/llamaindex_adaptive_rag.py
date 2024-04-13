@@ -4,10 +4,19 @@ from dataclasses import dataclass
 from typing import Any, List, Literal
 
 import nest_asyncio
+from pypdf import mult
 import streamlit as st
-from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.core import (
+    Settings,
+    SimpleDirectoryReader,
+    VectorStoreIndex,
+    get_response_synthesizer,
+)
 from llama_index.core.agent import AgentRunner, FunctionCallingAgentWorker
 from llama_index.core.indices.document_summary.base import DocumentSummaryIndex
+from llama_index.core.indices.query.query_transform.base import (
+    StepDecomposeQueryTransform,
+)
 from llama_index.core.llms.llm import LLM
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.postprocessor.metadata_replacement import (
@@ -19,6 +28,7 @@ from llama_index.core.query_engine import (
     RetrieverQueryEngine,
 )
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
+from llama_index.core.response_synthesizers.type import ResponseMode
 from llama_index.core.retrievers import RecursiveRetriever
 from llama_index.core.schema import Document
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
@@ -31,8 +41,7 @@ from llama_index.llms.cohere import Cohere
 from llama_index.llms.gemini import Gemini
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
-from llama_index.core import get_response_synthesizer
-from llama_index.core.response_synthesizers.type import ResponseMode
+from llama_index.core.query_engine import MultiStepQueryEngine
 from loguru import logger
 from rich.pretty import pprint
 from tqdm.asyncio import tqdm
@@ -43,6 +52,7 @@ VERBOSE = True
 WIN_SZ = 3
 SIM_TOP_K = 5
 RERANK_TOP_K = 3
+N_MULTI_STEPS = 5
 
 
 def pretty_print(title: str = None, content: Any = None):
@@ -69,11 +79,20 @@ summary_llm = llm_map[
         "Summary LLM", list(llm_map.keys()), index=2, key="summary_llm"
     )
 ]
+
+multi_step_query_engine_llm = llm_map[
+    st.sidebar.selectbox(
+        "Multi-step Query Engine LLM",
+        list(llm_map.keys()),
+        index=3,
+        key="multi_step_query_engine_llm",
+    )
+]
 standalone_query_engine_llm = llm_map[
     st.sidebar.selectbox(
         "Standalone Query Engine LLM",
         list(llm_map.keys()),
-        index=2,
+        index=3,
         key="standalone_query_engine_llm",
     )
 ]
@@ -111,6 +130,7 @@ class DataSource:
     name: str
     description: str
     query_engine: BaseQueryEngine
+    multi_step_query_engine: BaseQueryEngine
 
     def __hash__(self):
         return hash((self.name, self.description))
@@ -175,16 +195,36 @@ async def index_and_chunks(file_name: str, raw_docs: List[Document]) -> DataSour
         verbose=VERBOSE,
     ).aquery("Provide the shortest description of the content.")
 
+    query_engine = RetrieverQueryEngine.from_args(
+        retriever,
+        llm=standalone_query_engine_llm,
+        node_postprocessors=[postproc, rerank],
+        verbose=VERBOSE,
+    )
     return DataSource(
         name=name,
         description=summary.response,
-        query_engine=RetrieverQueryEngine.from_args(
-            retriever,
-            llm=standalone_query_engine_llm,
-            node_postprocessors=[postproc, rerank],
-            verbose=VERBOSE,
+        query_engine=query_engine,
+        multi_step_query_engine=MultiStepQueryEngine(
+            query_engine=query_engine,
+            query_transform=StepDecomposeQueryTransform(
+                llm=multi_step_query_engine_llm, verbose=VERBOSE
+            ),
+            num_steps=N_MULTI_STEPS,
         ),
     )
+
+
+def build_mulit_steps_query_engine_tools(
+    ds_list: List[DataSource],
+) -> List[QueryEngineTool]:
+    return [
+        QueryEngineTool(
+            query_engine=ds.multi_step_query_engine,
+            metadata=ToolMetadata(name=ds.name, description=ds.description),
+        )
+        for ds in ds_list
+    ]
 
 
 def build_standalone_query_engine_tools(
@@ -217,7 +257,7 @@ def build_standalone_query_engine_tools_agent_tool(
     description_liist = []
     for tools in query_engine_tools:
         meta = tools.metadata
-        description_liist.append(f"Description of {meta.name}: {meta.description}")
+        description_liist.append(f"Description of {meta.name}:\n{meta.description}\n")
     description = "\n\n".join(description_liist)
     return QueryEngineTool(
         query_engine=agent_runner,
@@ -248,7 +288,7 @@ def build_fallback_query_engine_tool() -> QueryEngineTool:
 
 
 def build_adaptive_rag_chain(ds_list: List[DataSource]) -> RouterQueryEngine:
-    standalone_query_engine_tools = build_standalone_query_engine_tools(ds_list)
+    multi_steps_query_engine_tools = build_mulit_steps_query_engine_tools(ds_list)
     standalone_query_engine_tools_agent_tool = (
         build_standalone_query_engine_tools_agent_tool(
             build_standalone_query_engine_tools(ds_list)
@@ -256,7 +296,7 @@ def build_adaptive_rag_chain(ds_list: List[DataSource]) -> RouterQueryEngine:
     )
     fallback_query_engine_tool = build_fallback_query_engine_tool()
     query_engine_tools = (
-        standalone_query_engine_tools
+        multi_steps_query_engine_tools
         + [standalone_query_engine_tools_agent_tool]
         + [fallback_query_engine_tool]
     )

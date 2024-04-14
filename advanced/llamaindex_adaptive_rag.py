@@ -1,7 +1,7 @@
 import asyncio
 import os
 from dataclasses import dataclass
-from typing import Any, List, Literal
+from typing import Any, List, Literal, Dict
 
 import nest_asyncio
 from pypdf import mult
@@ -66,7 +66,7 @@ def pretty_print(title: str = None, content: Any = None):
     pprint(content)
 
 
-llm_map = {
+llm_map: Dict[str, LLM] = {
     "anthropic": Anthropic(temperature=0, model="claude-3-haiku-20240307"),
     "openai": OpenAI(temperature=0, model="gpt-4-turbo"),
     "cohere": Cohere(temperature=0, max_tokens=2048),
@@ -239,9 +239,10 @@ def build_standalone_query_engine_tools(
     ]
 
 
-def build_standalone_query_engine_tools_agent_tool(
+def build_query_engine_tools_agent_tool(
     query_engine_tools: List[QueryEngineTool],
-) -> AgentRunner:
+    base_description: str,
+) -> QueryEngineTool:
     agent_worker = FunctionCallingAgentWorker.from_tools(
         query_engine_tools,
         llm=agent_llm,
@@ -254,14 +255,14 @@ def build_standalone_query_engine_tools_agent_tool(
         verbose=VERBOSE,
     )
 
-    description_liist = []
+    description_liist = [base_description]
     for tools in query_engine_tools:
         meta = tools.metadata
         description_liist.append(f"Description of {meta.name}:\n{meta.description}\n")
     description = "\n\n".join(description_liist)
     return QueryEngineTool(
         query_engine=agent_runner,
-        metadata=ToolMetadata(description=description, name="Agent-tool"),
+        metadata=ToolMetadata(description=description),
     )
 
 
@@ -270,33 +271,43 @@ class LLMQueryEngine(CustomQueryEngine):
 
     llm: LLM
 
+    def __init__(self, llm: LLM):
+        self.llm = llm
+
     def custom_query(self, query_str: str):
         return str(self.llm.complete(query_str))
 
 
 def build_fallback_query_engine_tool() -> QueryEngineTool:
-
     return QueryEngineTool(
         query_engine=LLMQueryEngine(llm=general_llm),
         metadata=ToolMetadata(
             name="General queries as fallback",
             description=(
-                "Provides information about general queries other than specific data sources, as fallback action."
+                "Provides information about general queries other than specific data sources, as fallback action if no other tool is selected."
             ),
         ),
     )
 
 
 def build_adaptive_rag_chain(ds_list: List[DataSource]) -> RouterQueryEngine:
-    multi_steps_query_engine_tools = build_mulit_steps_query_engine_tools(ds_list)
-    standalone_query_engine_tools_agent_tool = (
-        build_standalone_query_engine_tools_agent_tool(
-            build_standalone_query_engine_tools(ds_list)
-        )
+    standalone_query_engine_tools = build_standalone_query_engine_tools(ds_list)
+    standalone_query_engine_tools_agent_tool = build_query_engine_tools_agent_tool(
+        build_standalone_query_engine_tools(ds_list),
+        "Useful for queries that span multiple and cross-docs, the docs should cover different topics:\n",
     )
+
+    multi_steps_query_engine_tools = build_mulit_steps_query_engine_tools(ds_list)
+    multi_steps_query_engine_tools_agent_tool = build_query_engine_tools_agent_tool(
+        multi_steps_query_engine_tools(ds_list),
+        "Useful for complex queries that span multiple and cross-docs with the help of multi-steps, the docs should cover different topics:\n",
+    )
+
     fallback_query_engine_tool = build_fallback_query_engine_tool()
     query_engine_tools = (
         multi_steps_query_engine_tools
+        + [multi_steps_query_engine_tools_agent_tool]
+        + standalone_query_engine_tools
         + [standalone_query_engine_tools_agent_tool]
         + [fallback_query_engine_tool]
     )

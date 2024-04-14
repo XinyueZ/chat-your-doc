@@ -217,10 +217,13 @@ async def index_and_chunks(file_name: str, raw_docs: List[Document]) -> DataSour
 def build_mulit_step_query_engine_tools(
     ds_list: List[DataSource],
 ) -> List[QueryEngineTool]:
+    desc_fmt = "Useful for relative complex queries on the content with multi-step that covers the following dedicated topic:\n{topic}\n"
     return [
         QueryEngineTool(
             query_engine=ds.multi_step_query_engine,
-            metadata=ToolMetadata(name=ds.name, description=ds.description),
+            metadata=ToolMetadata(
+                name=ds.name, description=desc_fmt.format(topic=ds.description)
+            ),
         )
         for ds in ds_list
     ]
@@ -229,10 +232,16 @@ def build_mulit_step_query_engine_tools(
 def build_standalone_query_engine_tools(
     ds_list: List[DataSource],
 ) -> List[QueryEngineTool]:
+    desc_fmt = (
+        "Useful for simple queries on the content that covers the following dedicated topic:\n{topic}\n"
+    )
+
     return [
         QueryEngineTool(
             query_engine=ds.query_engine,
-            metadata=ToolMetadata(name=ds.name, description=ds.description),
+            metadata=ToolMetadata(
+                name=ds.name, description=desc_fmt.format(topic=ds.description)
+            ),
         )
         for ds in ds_list
     ]

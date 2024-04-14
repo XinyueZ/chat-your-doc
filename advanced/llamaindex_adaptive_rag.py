@@ -42,6 +42,8 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.core.query_engine import MultiStepQueryEngine
+from llama_index.legacy.embeddings.langchain import LangchainEmbedding
+from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from loguru import logger
 from rich.pretty import pprint
 from tqdm.asyncio import tqdm
@@ -114,10 +116,7 @@ Settings.llm = llm_map[
 ]
 
 
-Settings.embed_model = NomicEmbedding(
-    api_key=os.getenv("NOMIC_API_KEY"),
-    model_name="nomic-embed-text-v1.5",
-)
+Settings.embed_model = LangchainEmbedding(NVIDIAEmbeddings(model="nvolveqa_40k"))
 Settings.node_parser = SentenceWindowNodeParser.from_defaults(
     window_size=WIN_SZ,
     window_metadata_key="window",
@@ -215,7 +214,7 @@ async def index_and_chunks(file_name: str, raw_docs: List[Document]) -> DataSour
     )
 
 
-def build_mulit_steps_query_engine_tools(
+def build_mulit_step_query_engine_tools(
     ds_list: List[DataSource],
 ) -> List[QueryEngineTool]:
     return [
@@ -271,9 +270,6 @@ class LLMQueryEngine(CustomQueryEngine):
 
     llm: LLM
 
-    def __init__(self, llm: LLM):
-        self.llm = llm
-
     def custom_query(self, query_str: str):
         return str(self.llm.complete(query_str))
 
@@ -297,16 +293,16 @@ def build_adaptive_rag_chain(ds_list: List[DataSource]) -> RouterQueryEngine:
         "Useful for queries that span multiple and cross-docs, the docs should cover different topics:\n",
     )
 
-    multi_steps_query_engine_tools = build_mulit_steps_query_engine_tools(ds_list)
-    multi_steps_query_engine_tools_agent_tool = build_query_engine_tools_agent_tool(
-        multi_steps_query_engine_tools(ds_list),
-        "Useful for complex queries that span multiple and cross-docs with the help of multi-steps, the docs should cover different topics:\n",
+    multi_step_query_engine_tools = build_mulit_step_query_engine_tools(ds_list)
+    multi_step_query_engine_tools_agent_tool = build_query_engine_tools_agent_tool(
+        build_mulit_step_query_engine_tools(ds_list),
+        "Useful for complex queries that span multiple and cross-docs with the help of multi-step, the docs should cover different topics:\n",
     )
 
     fallback_query_engine_tool = build_fallback_query_engine_tool()
     query_engine_tools = (
-        multi_steps_query_engine_tools
-        + [multi_steps_query_engine_tools_agent_tool]
+        multi_step_query_engine_tools
+        + [multi_step_query_engine_tools_agent_tool]
         + standalone_query_engine_tools
         + [standalone_query_engine_tools_agent_tool]
         + [fallback_query_engine_tool]

@@ -217,7 +217,7 @@ async def index_and_chunks(file_name: str, raw_docs: List[Document]) -> DataSour
 def build_mulit_step_query_engine_tools(
     ds_list: List[DataSource],
 ) -> List[QueryEngineTool]:
-    desc_fmt = "Useful for relative complex queries on the content with multi-step that covers the following dedicated topic:\n{topic}\n"
+    desc_fmt = "Useful for complex queries on the content with multi-step that covers the following dedicated topic:\n{topic}\n"
     return [
         QueryEngineTool(
             query_engine=ds.multi_step_query_engine,
@@ -263,11 +263,11 @@ def build_query_engine_tools_agent_tool(
         verbose=VERBOSE,
     )
 
-    description_liist = [base_description]
+    description_list = [base_description]
     for tools in query_engine_tools:
         meta = tools.metadata
-        description_liist.append(f"Description of {meta.name}:\n{meta.description}\n")
-    description = "\n\n".join(description_liist)
+        description_list.append(f"Description of {meta.name}:\n{meta.description}\n")
+    description = "\n\n".join(description_list)
     return QueryEngineTool(
         query_engine=agent_runner,
         metadata=ToolMetadata(description=description),
@@ -289,7 +289,7 @@ def build_fallback_query_engine_tool() -> QueryEngineTool:
         metadata=ToolMetadata(
             name="General queries as fallback",
             description=(
-                "Provides information about general queries other than specific data sources, as fallback action if no other tool is selected."
+                "Useful for information about general queries other than specific data sources, as fallback action if no other tool is selected."
             ),
         ),
     )

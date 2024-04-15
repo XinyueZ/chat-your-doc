@@ -327,13 +327,13 @@ def build_adaptive_rag_chain(ds_list: List[DataSource]) -> RouterQueryEngine:
 async def doc_uploader() -> BaseQueryEngine:
     with st.sidebar:
         uploaded_docs = st.file_uploader(
-            "# Upload one text content file",
+            "# Upload files",
             key="doc_uploader",
             accept_multiple_files=True,
         )
         if not uploaded_docs:
-            st.session_state["file_name"] = None
-            st.session_state["queries"] = None
+            st.session_state["file_names"] = None
+            st.session_state["query_engine"] = None
             logger.debug("No file uploaded")
             return None
         if uploaded_docs:

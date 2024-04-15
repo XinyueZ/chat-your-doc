@@ -362,7 +362,7 @@ async def doc_uploader() -> BaseQueryEngine:
                 else False
             )
             if all_same_files:
-                logger.debug("Same file, same quiries, no indexing needed")
+                logger.debug("Same files uploaded")
                 return st.session_state["query_engine"]
 
             logger.debug("New files, new queries, indexing needed")

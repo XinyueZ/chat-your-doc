@@ -3,6 +3,10 @@ Awesome LLMs applications and experiments
 
 Chat Your Doc is an experimental project aimed at exploring various applications based on LLM. Although it is nominally a chatbot project, its purpose is broader. The project explores various applications using tools such as [LangChain](https://www.langchain.com/), [LlamaIndex](https://www.llamaindex.ai/). In the "Lab Apps" section, you can find many examples, including simple and complex ones. The project focuses on researching and exploring various LLM applications, while also incorporating other fields such as UX and computer vision. The "Lab App" section includes a table with links to various apps, descriptions, launch commands, and demos.
 
+#### RAG 
+
+![](https://github.com/XinyueZ/chat-your-doc/blob/master/assets/images/Bildschirmfoto%202024-04-28%20um%2021.11.21.png)
+
 ----
 
 - [Setup](#setup)

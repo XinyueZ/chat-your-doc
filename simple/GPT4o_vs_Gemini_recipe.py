@@ -42,9 +42,10 @@ def pretty_print(title: str = "Untitled", content: Any = None):
 
 def create_chain(model: BaseChatModel, base64_image: bytes):
     if st.session_state.model_sel == "Gemini-Pro-Vision":
+        # https://python.langchain.com/v0.1/docs/integrations/chat/google_generative_ai/#gemini-prompting-faqs
+        # The Gemini hasn't supported multiturn approach which means a proper system and history places
         prompt = ChatPromptTemplate.from_messages(
             [
-                # MessagesPlaceholder(variable_name="history"),
                 HumanMessagePromptTemplate.from_template(
                     template=(
                         [

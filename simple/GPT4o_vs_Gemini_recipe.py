@@ -1,8 +1,12 @@
 import base64
 import os
 import sys
+from functools import partial
 from inspect import getframeinfo, stack
 from typing import Any
+
+import asyncio
+import nest_asyncio
 
 import streamlit as st
 from langchain.chains import ConversationChain
@@ -13,8 +17,13 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from rich.pretty import pprint
+
+nest_asyncio.apply()
+
+st.set_page_config(layout="wide")
 
 VERBOSE = True
 
@@ -29,9 +38,6 @@ def pretty_print(title: str = "Untitled", content: Any = None):
         f":--> {title} --> {info.filename} --> {info.function} --> line: {info.lineno} --:"
     )
     pprint(content)
-
-
-st.set_page_config(layout="wide")
 
 
 def create_chain(model: BaseChatModel, base64_image: bytes):
@@ -74,12 +80,7 @@ def create_chain(model: BaseChatModel, base64_image: bytes):
     return prompt | model
 
 
-def chat_with_model(
-    base64_image: bytes = None,
-    streaming=True,
-    temperature=0.0,
-    max_tokens=2048 * 2,
-):
+def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=False):
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "history" not in st.session_state:
@@ -95,11 +96,7 @@ def chat_with_model(
             with st.spinner("Thinking..."):
                 chat_chain = RunnableWithMessageHistory(
                     create_chain(
-                        ChatOpenAI(
-                            model="gpt-4o",
-                            temperature=temperature,
-                            max_tokens=max_tokens,
-                        ),
+                        model,
                         base64_image,
                     ),
                     lambda _: st.session_state.history,
@@ -111,7 +108,11 @@ def chat_with_model(
                     {"query": prompt},
                     {"configurable": {"session_id": None}},
                 )
-                content = st.write_stream(res)
+                if not streaming:
+                    content = res.content
+                    st.write(content)
+                else:
+                    content = st.write_stream(res)
 
         st.session_state.messages.append({"role": "assistant", "content": content})
 
@@ -151,12 +152,34 @@ def doc_uploader() -> bytes:
         return None
 
 
-def main():
+async def main():
     base64_image = doc_uploader()
     if base64_image:
         st.sidebar.image(st.session_state["file_name"], use_column_width=True)
-    chat_with_model(base64_image)
+
+    temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
+    max_tokens = 2048
+
+    model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini-Pro-Vision"], index=0)
+    chat_with_model(
+        (
+            ChatGoogleGenerativeAI(
+                model="gemini-pro-vision",
+                temperature=st.session_state.key_temperature,
+                max_tokens=max_tokens,
+            )
+            if model_sel == "Gemini-Pro-Vision"
+            else ChatOpenAI(
+                model="gpt-4o",
+                temperature=st.session_state.key_temperature,
+                max_tokens=max_tokens,
+            )
+        ),
+        base64_image,
+        streaming=st.session_state.get("key_streaming", True),
+    )
+    streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -8,25 +8,22 @@ from typing import Any
 
 import nest_asyncio
 import streamlit as st
-from langchain.memory import ChatMessageHistory
-from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts import PromptTemplate
-from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
-
-from langchain_core.runnables import Runnable
-
 from langchain import hub
 from langchain.agents import Tool, load_tools
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import create_structured_chat_agent
-
+from langchain.memory import ChatMessageHistory
+from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
+from langchain.tools import tool
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-
+from langchain_core.runnables import Runnable
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from rich.pretty import pprint
 
 nest_asyncio.apply()
@@ -34,6 +31,7 @@ nest_asyncio.apply()
 st.set_page_config(layout="wide")
 
 VERBOSE = True
+MAX_TOKEN = 2048
 
 
 def pretty_print(title: str = "Untitled", content: Any = None):
@@ -140,9 +138,9 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
             with st.spinner("Thinking..."):
                 chat_chain = RunnableWithMessageHistory(
                     create_chain(
-                        model,  # .bind_tools([VisualRecipe]),
+                        model,
                         base64_image,
-                    ),  # .with_listeners(on_end=fn_end),
+                    ),
                     lambda _: st.session_state.history,
                     input_messages_key="query",
                     history_messages_key="history",
@@ -162,45 +160,43 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
 
 
 class VisualRecipe(BaseModel):
-    """visualize the recipe"""
-
     context: str = Field(
         ...,
-        description="""The prompt asks the model to generate an image based on an eating recipe to 
-visualize the process of making the recipe.
-""",
+        description="""The context information for the image generation function to visualize.""",
     )
 
 
-@st.experimental_dialog("Generate image", width="large")
-def gen_image(context: str, max_tokens: int):
-    with st.spinner("Generating..."):
-        llm = ChatOpenAI(
-            model="gpt-4o",
-            temperature=st.session_state.key_temperature,
-            max_tokens=max_tokens,
-        )
-        tools = load_tools(["dalle-image-generator"])
-        agent = create_structured_chat_agent(
-            llm=llm,
-            tools=tools,
-            prompt=hub.pull("hwchase17/structured-chat-agent"),
-        )
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            handle_parsing_errors=True,
-            return_intermediate_steps=True,
-        )
-        prompt = """Create an image with the following context:
-    Context:
-    {context}
+@tool("generate-image", args_schema=VisualRecipe, return_direct=False)
+def generate_image(context: str):
+    """Generate an image for the visualization request based on the context."""
+    with st.sidebar:
+        with st.spinner("Generating..."):
+            llm = ChatOpenAI(
+                model="gpt-4o",
+                temperature=st.session_state.key_temperature,
+                max_tokens=MAX_TOKEN,
+            )
+            tools = load_tools(["dalle-image-generator"])
+            agent = create_structured_chat_agent(
+                llm=llm,
+                tools=tools,
+                prompt=hub.pull("hwchase17/structured-chat-agent"),
+            )
+            agent_executor = AgentExecutor(
+                agent=agent,
+                tools=tools,
+                handle_parsing_errors=True,
+                return_intermediate_steps=True,
+            )
+            prompt = f"""Create an image with the following context:
+        Context:
+        {context}
 
-    Notice: Return a markdown style image link.
-    """
-        image_gen = agent_executor.invoke({"input": prompt})
-        st.markdown(f"![]({image_gen['output']})")
-        pretty_print("Image Gen:", image_gen)
+        Notice: Return a markdown style image link.
+        """
+            image_gen = agent_executor.invoke({"input": prompt})
+            st.markdown(f"![]({image_gen['output']})")
+            pretty_print("Image Gen:", image_gen)
 
 
 def doc_uploader() -> bytes:
@@ -244,7 +240,6 @@ async def main():
         st.sidebar.image(st.session_state["file_name"], use_column_width=True)
 
     temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
-    max_tokens = 2048
 
     st.session_state["model_sel"] = st.sidebar.selectbox(
         "Model", ["GPT-4o", "Gemini Pro"], index=0
@@ -256,14 +251,14 @@ async def main():
                     "gemini-pro-vision" if base64_image else "gemini-pro"
                 ),  # Gemini can currently only process text and text-image separately.
                 temperature=st.session_state.key_temperature,
-                max_tokens=max_tokens,
+                max_tokens=MAX_TOKEN,
             )
             if st.session_state.model_sel == "Gemini Pro"
             else ChatOpenAI(
                 model="gpt-4o",
                 temperature=st.session_state.key_temperature,
-                max_tokens=max_tokens,
-            )
+                max_tokens=MAX_TOKEN,
+            ).bind_functions([generate_image])
         ),
         base64_image,
         streaming=st.session_state.get("key_streaming", True),
@@ -273,7 +268,7 @@ async def main():
     gen_img_prompt = st.sidebar.text_area("Generate image", placeholder="prompt...")
     if st.sidebar.button("Generate"):
         if gen_img_prompt is not None and gen_img_prompt != "":
-            gen_image(gen_img_prompt, max_tokens)
+            generate_image(gen_img_prompt)
 
 
 if __name__ == "__main__":

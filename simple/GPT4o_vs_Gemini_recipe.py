@@ -41,42 +41,73 @@ def pretty_print(title: str = "Untitled", content: Any = None):
 
 
 def create_chain(model: BaseChatModel, base64_image: bytes):
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(
-                content=[
-                    {
-                        "type": "text",
-                        "text": """As a helpful assistant, you should respond to the user's query.""",
-                    }
-                ]
-            ),
-            MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template(
-                template=(
-                    [
-                        {
-                            "type": "text",
-                            "text": "{query}",
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}",
+    if st.session_state.model_sel == "Gemini-Pro-Vision":
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                # MessagesPlaceholder(variable_name="history"),
+                HumanMessagePromptTemplate.from_template(
+                    template=(
+                        [
+                            {
+                                "type": "text",
+                                "text": f"Conversation history:\n\n{st.session_state.history}\n\n"
+                                + "My question:\n\n{query}\n\n",
                             },
-                        },
-                    ]
-                    if base64_image
-                    else [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}",
+                                },
+                            },
+                        ]
+                        if base64_image
+                        else [
+                            {
+                                "type": "text",
+                                "text": "{query}",
+                            },
+                        ]
+                    )
+                ),
+            ]
+        )
+    else:
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content=[
                         {
                             "type": "text",
-                            "text": "{query}",
-                        },
+                            "text": """As a helpful assistant, you should respond to the user's query.""",
+                        }
                     ]
-                )
-            ),
-        ]
-    )
+                ),
+                MessagesPlaceholder(variable_name="history"),
+                HumanMessagePromptTemplate.from_template(
+                    template=(
+                        [
+                            {
+                                "type": "text",
+                                "text": "{query}",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}",
+                                },
+                            },
+                        ]
+                        if base64_image
+                        else [
+                            {
+                                "type": "text",
+                                "text": "{query}",
+                            },
+                        ]
+                    )
+                ),
+            ]
+        )
     return prompt | model
 
 
@@ -85,6 +116,7 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
         st.session_state.messages = []
     if "history" not in st.session_state:
         st.session_state.history = ChatMessageHistory()
+    pretty_print("history", st.session_state.history)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -160,7 +192,9 @@ async def main():
     temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
     max_tokens = 2048
 
-    model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini-Pro-Vision"], index=0)
+    st.session_state["model_sel"] = st.sidebar.selectbox(
+        "Model", ["GPT-4o", "Gemini-Pro-Vision"], index=0
+    )
     chat_with_model(
         (
             ChatGoogleGenerativeAI(
@@ -168,7 +202,7 @@ async def main():
                 temperature=st.session_state.key_temperature,
                 max_tokens=max_tokens,
             )
-            if model_sel == "Gemini-Pro-Vision"
+            if st.session_state.model_sel == "Gemini-Pro-Vision"
             else ChatOpenAI(
                 model="gpt-4o",
                 temperature=st.session_state.key_temperature,

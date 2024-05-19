@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 import sys
@@ -5,20 +6,27 @@ from functools import partial
 from inspect import getframeinfo, stack
 from typing import Any
 
-import asyncio
 import nest_asyncio
-
 import streamlit as st
-from langchain.chains import ConversationChain
 from langchain.memory import ChatMessageHistory
 from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+
+from langchain_core.runnables import Runnable
+
+from langchain import hub
+from langchain.agents import Tool, load_tools
+from langchain.agents.agent import AgentExecutor
+from langchain.agents.structured_chat.base import create_structured_chat_agent
+
+from langchain_core.pydantic_v1 import BaseModel, Field
+
 from rich.pretty import pprint
 
 nest_asyncio.apply()
@@ -40,10 +48,11 @@ def pretty_print(title: str = "Untitled", content: Any = None):
     pprint(content)
 
 
-def create_chain(model: BaseChatModel, base64_image: bytes):
-    if st.session_state.model_sel == "Gemini-Pro-Vision":
+def create_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
+    if st.session_state.model_sel == "Gemini Pro":
         # https://python.langchain.com/v0.1/docs/integrations/chat/google_generative_ai/#gemini-prompting-faqs
         # The Gemini hasn't supported multiturn approach which means a proper system and history places
+        history = st.session_state.history
         prompt = ChatPromptTemplate.from_messages(
             [
                 HumanMessagePromptTemplate.from_template(
@@ -51,8 +60,8 @@ def create_chain(model: BaseChatModel, base64_image: bytes):
                         [
                             {
                                 "type": "text",
-                                "text": f"Conversation history:\n\n{st.session_state.history}\n\n"
-                                + "My question:\n\n{query}\n\n",
+                                "text": f"Chat history:\n{history}"
+                                + "\n\nMy question:\n\n{query}\n\n",
                             },
                             {
                                 "type": "image_url",
@@ -65,6 +74,8 @@ def create_chain(model: BaseChatModel, base64_image: bytes):
                         else [
                             {
                                 "type": "text",
+                                "text": f"Chat history:\n{history}"
+                                + "\n\nMy question:\n\n{query}\n\n",
                                 "text": "{query}",
                             },
                         ]
@@ -129,9 +140,9 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
             with st.spinner("Thinking..."):
                 chat_chain = RunnableWithMessageHistory(
                     create_chain(
-                        model,
+                        model,  # .bind_tools([VisualRecipe]),
                         base64_image,
-                    ),
+                    ),  # .with_listeners(on_end=fn_end),
                     lambda _: st.session_state.history,
                     input_messages_key="query",
                     history_messages_key="history",
@@ -148,6 +159,48 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
                     content = st.write_stream(res)
 
         st.session_state.messages.append({"role": "assistant", "content": content})
+
+
+class VisualRecipe(BaseModel):
+    """visualize the recipe"""
+
+    context: str = Field(
+        ...,
+        description="""The prompt asks the model to generate an image based on an eating recipe to 
+visualize the process of making the recipe.
+""",
+    )
+
+
+@st.experimental_dialog("Generate image", width="large")
+def gen_image(context: str, max_tokens: int):
+    with st.spinner("Generating..."):
+        llm = ChatOpenAI(
+            model="gpt-4o",
+            temperature=st.session_state.key_temperature,
+            max_tokens=max_tokens,
+        )
+        tools = load_tools(["dalle-image-generator"])
+        agent = create_structured_chat_agent(
+            llm=llm,
+            tools=tools,
+            prompt=hub.pull("hwchase17/structured-chat-agent"),
+        )
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            handle_parsing_errors=True,
+            return_intermediate_steps=True,
+        )
+        prompt = """Create an image with the following context:
+    Context:
+    {context}
+
+    Notice: Return a markdown style image link.
+    """
+        image_gen = agent_executor.invoke({"input": prompt})
+        st.markdown(f"![]({image_gen['output']})")
+        pretty_print("Image Gen:", image_gen)
 
 
 def doc_uploader() -> bytes:
@@ -194,16 +247,18 @@ async def main():
     max_tokens = 2048
 
     st.session_state["model_sel"] = st.sidebar.selectbox(
-        "Model", ["GPT-4o", "Gemini-Pro-Vision"], index=0
+        "Model", ["GPT-4o", "Gemini Pro"], index=0
     )
     chat_with_model(
         (
             ChatGoogleGenerativeAI(
-                model="gemini-pro-vision",
+                model=(
+                    "gemini-pro-vision" if base64_image else "gemini-pro"
+                ),  # Gemini can currently only process text and text-image separately.
                 temperature=st.session_state.key_temperature,
                 max_tokens=max_tokens,
             )
-            if st.session_state.model_sel == "Gemini-Pro-Vision"
+            if st.session_state.model_sel == "Gemini Pro"
             else ChatOpenAI(
                 model="gpt-4o",
                 temperature=st.session_state.key_temperature,
@@ -214,6 +269,11 @@ async def main():
         streaming=st.session_state.get("key_streaming", True),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
+
+    gen_img_prompt = st.sidebar.text_area("Generate image", placeholder="prompt...")
+    if st.sidebar.button("Generate"):
+        if gen_img_prompt is not None and gen_img_prompt != "":
+            gen_image(gen_img_prompt, max_tokens)
 
 
 if __name__ == "__main__":

@@ -1,12 +1,20 @@
-import streamlit as st
-from typing import Any
-from inspect import getframeinfo, stack
-from rich.pretty import pprint
-import os, sys
 import base64
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
+import os
+import sys
+from inspect import getframeinfo, stack
+from typing import Any
+
+import streamlit as st
 from langchain.chains import ConversationChain
+from langchain.memory import ChatMessageHistory
+from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_openai import ChatOpenAI
+from rich.pretty import pprint
 
 VERBOSE = True
 
@@ -26,36 +34,56 @@ def pretty_print(title: str = "Untitled", content: Any = None):
 st.set_page_config(layout="wide")
 
 
-def query_model(
-    message: str,
-    base64_image: bytes,
+def create_chain(model: BaseChatModel, base64_image: bytes):
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": """As a helpful assistant, you should respond to the user's query.""",
+                    }
+                ]
+            ),
+            MessagesPlaceholder(variable_name="history"),
+            HumanMessagePromptTemplate.from_template(
+                template=(
+                    [
+                        {
+                            "type": "text",
+                            "text": "{query}",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                            },
+                        },
+                    ]
+                    if base64_image
+                    else [
+                        {
+                            "type": "text",
+                            "text": "{query}",
+                        },
+                    ]
+                )
+            ),
+        ]
+    )
+    return prompt | model
+
+
+def chat_with_model(
+    base64_image: bytes = None,
     streaming=True,
     temperature=0.0,
     max_tokens=2048 * 2,
 ):
-    chat = ChatOpenAI(model="gpt-4o", temperature=0, max_tokens=1024 * 2)
-    out_met = chat.invoke if not streaming else chat.stream
-    res = out_met(
-        [
-            HumanMessage(
-                content=[
-                    {"type": "text", "text": message},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}",
-                        },
-                    },
-                ]
-            )
-        ]
-    )
-    return res
-
-
-def chat_with_model():
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "history" not in st.session_state:
+        st.session_state.history = ChatMessageHistory()
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -65,14 +93,26 @@ def chat_with_model():
             st.markdown(prompt)
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                res = st.session_state["bot"](prompt)
-            try:
-                content = query_model(prompt, st.session_state["base64_image"])
-            except Exception as e:
-                pretty_print("Cannot streaming", str(e))
-                st.write(res.response)
-                content = res.response
-            pretty_print("content", content)
+                chat_chain = RunnableWithMessageHistory(
+                    create_chain(
+                        ChatOpenAI(
+                            model="gpt-4o",
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                        ),
+                        base64_image,
+                    ),
+                    lambda _: st.session_state.history,
+                    input_messages_key="query",
+                    history_messages_key="history",
+                )
+                out_met = chat_chain.invoke if not streaming else chat_chain.stream
+                res = out_met(
+                    {"query": prompt},
+                    {"configurable": {"session_id": None}},
+                )
+                content = st.write_stream(res)
+
         st.session_state.messages.append({"role": "assistant", "content": content})
 
 
@@ -115,13 +155,7 @@ def main():
     base64_image = doc_uploader()
     if base64_image:
         st.sidebar.image(st.session_state["file_name"], use_column_width=True)
-        if query := st.text_input(
-            "Query",
-            key="query_text",
-            placeholder="Ask",
-        ):
-            response = query_model(query, base64_image)
-            st.write_stream(response)
+    chat_with_model(base64_image)
 
 
 if __name__ == "__main__":

@@ -103,8 +103,8 @@ def image_url_to_image(image_url: str) -> Image:
     return Image.open(requests.get(image_url, stream=True).raw)
 
 
-def generate_cooking_recipe_image(model: BaseChatModel, context: str) -> str:
-    """Generate an image illustrating the workflow of a cooking recipe."""
+def generate_image(model: BaseChatModel, context: str) -> str:
+    """Generate an image to illustrate for user request."""
 
     tools = load_tools(["dalle-image-generator"])
     agent = create_structured_chat_agent(
@@ -118,7 +118,7 @@ def generate_cooking_recipe_image(model: BaseChatModel, context: str) -> str:
         handle_parsing_errors=True,
         return_intermediate_steps=True,
     )
-    prompt = f"""Generate an image illustrating the workflow of a cooking recipe with the following context.
+    prompt = f"""Generate an image to illustrate for user request with the following context:
 
 Context:
 {context}
@@ -136,12 +136,12 @@ Notice:
         return None, None
 
 
-class GeneraeteCookRecipeImageTool(BaseModel):
-    """Generate an image illustrating the workflow of a cooking recipe."""
+class GenerateImageTool(BaseModel):
+    """Generate an image to illustrate for user request."""
 
     context: str = Field(
         ...,
-        description="The context for generating an image illustrating the workflow of a cooking recipe.",
+        description="The context for generating an image to illustrate what the user requested.",
     )
 
 
@@ -157,6 +157,10 @@ def chat_with_model(
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            # Keep image rendering while UI is being refreshed.
+            additional_kwargs = message.get("additional_kwargs", None)
+            if additional_kwargs and "image_url" in additional_kwargs:
+                st.image(image_url_to_image(additional_kwargs["image_url"]))
 
     if prompt := st.chat_input("Write...", key="chat_input"):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -178,6 +182,7 @@ def chat_with_model(
                     {"query": prompt},
                     {"configurable": {"session_id": None}},
                 )
+                content, additional_kwargs = None, None
                 if not streaming:
                     content = res.content
                     st.write(content)
@@ -212,6 +217,9 @@ def chat_with_model(
                                     st.write("No image generated.")
                                 # Finished tool call with a function, add result to history,
                                 # The model needs it for future interaction.
+                                additional_kwargs = (
+                                    {"image_url": image_url} if image_url else {}
+                                )
                                 st.session_state.history.messages.append(
                                     ToolMessage(
                                         content=(
@@ -220,22 +228,24 @@ def chat_with_model(
                                             else "Tool called, nothing was generated"
                                         ),
                                         tool_call_id=tool_id,
-                                        additional_kwargs=(
-                                            {"image_url": image_url}
-                                            if image_url
-                                            else {}
-                                        ),
+                                        additional_kwargs=additional_kwargs,
                                     )
                                 )
                             except Exception as e:
-                                st.write(f"Some thing went wrong.\n\n{e}")
+                                st.write(f"Something went wrong.\n\n{e}")
                                 st.session_state.history.messages.append(
                                     ToolMessage(
                                         content=f"Tool was called but failed to generate image.\n\n{e}",
                                         tool_call_id=tool_id,
                                     )
                                 )
-        st.session_state.messages.append({"role": "assistant", "content": content})
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": content,
+                "additional_kwargs": additional_kwargs,
+            }
+        )
 
 
 def doc_uploader() -> bytes:
@@ -291,31 +301,22 @@ async def main():
             temperature=st.session_state.key_temperature,
             max_tokens=MAX_TOKEN,
         )
-    partial_generate_cooking_recipe_image = partial(
-        generate_cooking_recipe_image,
+    partial_generate_image = partial(
+        generate_image,
         model=ChatOpenAI(
             model=OPENAI_LLM,
             temperature=st.session_state.key_temperature,
             max_tokens=MAX_TOKEN,
         ),
     )
-    FUN_MAPPING["GeneraeteCookRecipeImageTool"] = partial_generate_cooking_recipe_image
-    used_model = used_model.bind_tools([GeneraeteCookRecipeImageTool])
+    FUN_MAPPING["GenerateImageTool"] = partial_generate_image
+    used_model = used_model.bind_tools([GenerateImageTool])
     chat_with_model(
         used_model,
         base64_image,
         streaming=st.session_state.get("key_streaming", True),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
-    gen_img_prompt = st.sidebar.text_area(
-        "Illustrate cooking recipe",
-        label_visibility="collapsed",
-        placeholder="Generate an image illustrating the workflow of a cooking recipe.",
-    )
-    _, col2 = st.sidebar.columns([0.8, 0.2])
-    if col2.button("✨"):
-        if gen_img_prompt is not None and gen_img_prompt != "":
-            generate_cooking_recipe_image(used_model, gen_img_prompt)
 
 
 if __name__ == "__main__":

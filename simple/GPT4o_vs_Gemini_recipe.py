@@ -7,7 +7,12 @@ from typing import Any
 
 import nest_asyncio
 import streamlit as st
+
+from functools import partial
+
+
 from langchain import hub
+from langchain.tools import tool
 from langchain.agents import Tool, load_tools
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import create_structured_chat_agent
@@ -22,6 +27,11 @@ from langchain_core.runnables import Runnable
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from langchain_core.messages.tool import ToolMessage, ToolMessageChunk
+
+import requests
+from PIL import Image, UnidentifiedImageError
+
 from rich.pretty import pprint
 
 VERBOSE = True
@@ -30,6 +40,7 @@ MAX_TOKEN = 2048
 OPENAI_LLM = "gpt-4o"
 GOOGLE_LLM = "gemini-1.5-flash-latest"
 
+FUN_MAPPING = {}
 
 nest_asyncio.apply()
 
@@ -88,15 +99,65 @@ def create_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
     return prompt | model
 
 
-def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=False):
+def image_url_to_image(image_url: str) -> Image:
+    return Image.open(requests.get(image_url, stream=True).raw)
+
+
+def generate_cooking_recipe_image(model: BaseChatModel, context: str) -> str:
+    """Generate an image illustrating the workflow of a cooking recipe."""
+
+    tools = load_tools(["dalle-image-generator"])
+    agent = create_structured_chat_agent(
+        llm=model,
+        tools=tools,
+        prompt=hub.pull("hwchase17/structured-chat-agent"),
+    )
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        handle_parsing_errors=True,
+        return_intermediate_steps=True,
+    )
+    prompt = f"""Generate an image illustrating the workflow of a cooking recipe with the following context.
+
+Context:
+{context}
+
+Notice: 
+- ONLY return the image link.
+- WHEN the image includes text, it MUST be in the same language as the language of the input text.
+"""
+    image_gen = agent_executor.invoke({"input": prompt})
+    pretty_print("Image Gen:", image_gen)
+    try:
+        image_url = image_gen["output"]
+        return image_url_to_image(image_url), image_url
+    except UnidentifiedImageError:
+        return None, None
+
+
+class GeneraeteCookRecipeImageTool(BaseModel):
+    """Generate an image illustrating the workflow of a cooking recipe."""
+
+    context: str = Field(
+        ...,
+        description="The context for generating an image illustrating the workflow of a cooking recipe.",
+    )
+
+
+def chat_with_model(
+    model: BaseChatModel,
+    base64_image: bytes = None,
+    streaming=False,
+):
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "history" not in st.session_state:
         st.session_state.history = ChatMessageHistory()
-    pretty_print("history", st.session_state.history)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+
     if prompt := st.chat_input("Write...", key="chat_input"):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -122,39 +183,59 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
                     st.write(content)
                 else:
                     content = st.write_stream(res)
-
+                pretty_print("history", st.session_state.history)
+                if (
+                    len(st.session_state.history.messages) > 1
+                    and len(st.session_state.history.messages[-1].tool_calls) > 0
+                ):
+                    last_ai_msg = st.session_state.history.messages[-1]
+                    tool_calls = last_ai_msg.tool_calls
+                    streaming = False
+                    tool_call = tool_calls[0]
+                    if last_ai_msg.content is None or last_ai_msg.content == "":
+                        tool_id, tool_name, context = (
+                            tool_call["id"],
+                            tool_call["name"],
+                            tool_call["args"]["context"],
+                        )
+                        with st.spinner("Generating image..."):
+                            try:
+                                func = FUN_MAPPING.get(tool_name, None)
+                                image, image_url = (
+                                    func(context=context)
+                                    if func
+                                    else "No tool provided."
+                                )
+                                if image and image_url:
+                                    st.image(image)
+                                else:
+                                    st.write("No image generated.")
+                                # Finished tool call with a function, add result to history,
+                                # The model needs it for future interaction.
+                                st.session_state.history.messages.append(
+                                    ToolMessage(
+                                        content=(
+                                            f"Tool called and get image successfully."
+                                            if image_url
+                                            else "Tool called, nothing was generated"
+                                        ),
+                                        tool_call_id=tool_id,
+                                        additional_kwargs=(
+                                            {"image_url": image_url}
+                                            if image_url
+                                            else {}
+                                        ),
+                                    )
+                                )
+                            except Exception as e:
+                                st.write(f"Some thing went wrong.\n\n{e}")
+                                st.session_state.history.messages.append(
+                                    ToolMessage(
+                                        content=f"Tool was called but failed to generate image.\n\n{e}",
+                                        tool_call_id=tool_id,
+                                    )
+                                )
         st.session_state.messages.append({"role": "assistant", "content": content})
-
-
-@st.experimental_dialog("Generate cooking recipe flow", width="large")
-def generate_cooking_recipe_image(model: BaseChatModel, context: str):
-    """Generate an image illustrating the workflow of a cooking recipe."""
-
-    with st.spinner("Generating..."):
-        tools = load_tools(["dalle-image-generator"])
-        agent = create_structured_chat_agent(
-            llm=model,
-            tools=tools,
-            prompt=hub.pull("hwchase17/structured-chat-agent"),
-        )
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            handle_parsing_errors=True,
-            return_intermediate_steps=True,
-        )
-        prompt = f"""Generate an image illustrating the workflow of a cooking recipe with the following context.
-
-Context:
-{context}
-
-Notice: 
-- ONLY return a markdown style image link.
-- WHEN the image includes text, it MUST be in the same language as the language of the input text.
-"""
-        image_gen = agent_executor.invoke({"input": prompt})
-        st.markdown(f"![]({image_gen['output']})")
-        pretty_print("Image Gen:", image_gen)
 
 
 def doc_uploader() -> bytes:
@@ -198,26 +279,34 @@ async def main():
         st.sidebar.image(st.session_state["file_name"], use_column_width=True)
     temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
     model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini Pro"], index=0)
-    used_model = (
-        ChatGoogleGenerativeAI(
+    if model_sel == "Gemini Pro":
+        used_model = ChatGoogleGenerativeAI(
             model=GOOGLE_LLM,
             temperature=st.session_state.key_temperature,
             max_tokens=MAX_TOKEN,
         )
-        if model_sel == "Gemini Pro"
-        else ChatOpenAI(
+    else:
+        used_model = ChatOpenAI(
             model=OPENAI_LLM,
             temperature=st.session_state.key_temperature,
             max_tokens=MAX_TOKEN,
         )
+    partial_generate_cooking_recipe_image = partial(
+        generate_cooking_recipe_image,
+        model=ChatOpenAI(
+            model=OPENAI_LLM,
+            temperature=st.session_state.key_temperature,
+            max_tokens=MAX_TOKEN,
+        ),
     )
+    FUN_MAPPING["GeneraeteCookRecipeImageTool"] = partial_generate_cooking_recipe_image
+    used_model = used_model.bind_tools([GeneraeteCookRecipeImageTool])
     chat_with_model(
         used_model,
         base64_image,
         streaming=st.session_state.get("key_streaming", True),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
-
     gen_img_prompt = st.sidebar.text_area(
         "Illustrate cooking recipe",
         label_visibility="collapsed",

@@ -26,12 +26,17 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from rich.pretty import pprint
 
-nest_asyncio.apply()
-
-st.set_page_config(layout="wide")
 
 VERBOSE = True
 MAX_TOKEN = 2048
+
+OPENAI_LLM = "gpt-4o"
+GOOGLE_LLM = "gemini-1.5-flash-latest"
+
+
+nest_asyncio.apply()
+
+st.set_page_config(layout="wide")
 
 
 def pretty_print(title: str = "Untitled", content: Any = None):
@@ -47,77 +52,42 @@ def pretty_print(title: str = "Untitled", content: Any = None):
 
 
 def create_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
-    if st.session_state.model_sel == "Gemini Pro":
-        # https://python.langchain.com/v0.1/docs/integrations/chat/google_generative_ai/#gemini-prompting-faqs
-        # The Gemini hasn't supported multiturn approach which means a proper system and history places
-        history = st.session_state.history
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                HumanMessagePromptTemplate.from_template(
-                    template=(
-                        [
-                            {
-                                "type": "text",
-                                "text": f"Chat history:\n{history}"
-                                + "\n\nMy question:\n\n{query}\n\n",
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}",
-                                },
-                            },
-                        ]
-                        if base64_image
-                        else [
-                            {
-                                "type": "text",
-                                "text": f"Chat history:\n{history}"
-                                + "\n\nMy question:\n\n{query}\n\n",
-                                "text": "{query}",
-                            },
-                        ]
-                    )
-                ),
-            ]
-        )
-    else:
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                SystemMessage(
-                    content=[
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": """As a helpful assistant, you should respond to the user's query.""",
+                    }
+                ]
+            ),
+            MessagesPlaceholder(variable_name="history"),
+            HumanMessagePromptTemplate.from_template(
+                template=(
+                    [
                         {
                             "type": "text",
-                            "text": """As a helpful assistant, you should respond to the user's query.""",
-                        }
+                            "text": "{query}",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                            },
+                        },
                     ]
-                ),
-                MessagesPlaceholder(variable_name="history"),
-                HumanMessagePromptTemplate.from_template(
-                    template=(
-                        [
-                            {
-                                "type": "text",
-                                "text": "{query}",
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}",
-                                },
-                            },
-                        ]
-                        if base64_image
-                        else [
-                            {
-                                "type": "text",
-                                "text": "{query}",
-                            },
-                        ]
-                    )
-                ),
-            ]
-        )
+                    if base64_image
+                    else [
+                        {
+                            "type": "text",
+                            "text": "{query}",
+                        },
+                    ]
+                )
+            ),
+        ]
+    )
     return prompt | model
 
 
@@ -247,15 +217,13 @@ async def main():
     chat_with_model(
         (
             ChatGoogleGenerativeAI(
-                model=(
-                    "gemini-pro-vision" if base64_image else "gemini-pro"
-                ),  # Gemini can currently only process text and text-image separately.
+                model=GOOGLE_LLM,
                 temperature=st.session_state.key_temperature,
                 max_tokens=MAX_TOKEN,
             )
             if st.session_state.model_sel == "Gemini Pro"
             else ChatOpenAI(
-                model="gpt-4o",
+                model=OPENAI_LLM,
                 temperature=st.session_state.key_temperature,
                 max_tokens=MAX_TOKEN,
             ).bind_functions([generate_image])

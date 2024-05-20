@@ -2,7 +2,6 @@ import asyncio
 import base64
 import os
 import sys
-from functools import partial
 from inspect import getframeinfo, stack
 from typing import Any
 
@@ -14,7 +13,6 @@ from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import create_structured_chat_agent
 from langchain.memory import ChatMessageHistory
 from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
-from langchain.tools import tool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -25,7 +23,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from rich.pretty import pprint
-
 
 VERBOSE = True
 MAX_TOKEN = 2048
@@ -129,44 +126,35 @@ def chat_with_model(model: BaseChatModel, base64_image: bytes = None, streaming=
         st.session_state.messages.append({"role": "assistant", "content": content})
 
 
-class VisualRecipe(BaseModel):
-    context: str = Field(
-        ...,
-        description="""The context information for the image generation function to visualize.""",
-    )
+@st.experimental_dialog("Generate cooking recipe flow", width="large")
+def generate_cooking_recipe_image(model: BaseChatModel, context: str):
+    """Generate an image illustrating the workflow of a cooking recipe."""
 
+    with st.spinner("Generating..."):
+        tools = load_tools(["dalle-image-generator"])
+        agent = create_structured_chat_agent(
+            llm=model,
+            tools=tools,
+            prompt=hub.pull("hwchase17/structured-chat-agent"),
+        )
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            handle_parsing_errors=True,
+            return_intermediate_steps=True,
+        )
+        prompt = f"""Generate an image illustrating the workflow of a cooking recipe with the following context.
 
-@tool("generate-image", args_schema=VisualRecipe, return_direct=False)
-def generate_image(context: str):
-    """Generate an image for the visualization request based on the context."""
-    with st.sidebar:
-        with st.spinner("Generating..."):
-            llm = ChatOpenAI(
-                model="gpt-4o",
-                temperature=st.session_state.key_temperature,
-                max_tokens=MAX_TOKEN,
-            )
-            tools = load_tools(["dalle-image-generator"])
-            agent = create_structured_chat_agent(
-                llm=llm,
-                tools=tools,
-                prompt=hub.pull("hwchase17/structured-chat-agent"),
-            )
-            agent_executor = AgentExecutor(
-                agent=agent,
-                tools=tools,
-                handle_parsing_errors=True,
-                return_intermediate_steps=True,
-            )
-            prompt = f"""Create an image with the following context:
-        Context:
-        {context}
+Context:
+{context}
 
-        Notice: Return a markdown style image link.
-        """
-            image_gen = agent_executor.invoke({"input": prompt})
-            st.markdown(f"![]({image_gen['output']})")
-            pretty_print("Image Gen:", image_gen)
+Notice: 
+- ONLY return a markdown style image link.
+- WHEN the image includes text, it MUST be in the same language as the language of the input text.
+"""
+        image_gen = agent_executor.invoke({"input": prompt})
+        st.markdown(f"![]({image_gen['output']})")
+        pretty_print("Image Gen:", image_gen)
 
 
 def doc_uploader() -> bytes:
@@ -208,35 +196,37 @@ async def main():
     base64_image = doc_uploader()
     if base64_image:
         st.sidebar.image(st.session_state["file_name"], use_column_width=True)
-
     temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
-
-    st.session_state["model_sel"] = st.sidebar.selectbox(
-        "Model", ["GPT-4o", "Gemini Pro"], index=0
+    model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini Pro"], index=0)
+    used_model = (
+        ChatGoogleGenerativeAI(
+            model=GOOGLE_LLM,
+            temperature=st.session_state.key_temperature,
+            max_tokens=MAX_TOKEN,
+        )
+        if model_sel == "Gemini Pro"
+        else ChatOpenAI(
+            model=OPENAI_LLM,
+            temperature=st.session_state.key_temperature,
+            max_tokens=MAX_TOKEN,
+        )
     )
     chat_with_model(
-        (
-            ChatGoogleGenerativeAI(
-                model=GOOGLE_LLM,
-                temperature=st.session_state.key_temperature,
-                max_tokens=MAX_TOKEN,
-            )
-            if st.session_state.model_sel == "Gemini Pro"
-            else ChatOpenAI(
-                model=OPENAI_LLM,
-                temperature=st.session_state.key_temperature,
-                max_tokens=MAX_TOKEN,
-            ).bind_functions([generate_image])
-        ),
+        used_model,
         base64_image,
         streaming=st.session_state.get("key_streaming", True),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
 
-    gen_img_prompt = st.sidebar.text_area("Generate image", placeholder="prompt...")
-    if st.sidebar.button("Generate"):
+    gen_img_prompt = st.sidebar.text_area(
+        "Illustrate cooking recipe",
+        label_visibility="collapsed",
+        placeholder="Generate an image illustrating the workflow of a cooking recipe.",
+    )
+    _, col2 = st.sidebar.columns([0.8, 0.2])
+    if col2.button("✨"):
         if gen_img_prompt is not None and gen_img_prompt != "":
-            generate_image(gen_img_prompt)
+            generate_cooking_recipe_image(used_model, gen_img_prompt)
 
 
 if __name__ == "__main__":

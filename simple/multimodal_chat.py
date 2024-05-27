@@ -205,14 +205,17 @@ def annotate_image(
         human_input = template.format_messages(img_desc=image_description)
         return model.invoke(human_input).content
 
+    pretty_print("Image description:", image_description)
     classes = coco_label_extractor(model, image_description)
+    pretty_print("Classes:", classes)
+    classes = classes.split(",") if classes else list()
     model = YOLO(CV_MODEL)  # or select yolov8m/l-world.pt for different sizes
 
     if classes is not None and len(classes) > 0:
         model.set_classes(classes)
 
     image = Image.open(io.BytesIO(base64.b64decode(base64_image)))
-    preds = model.predict(np.asarray(image))
+    preds = model.predict(image)
     results: Results = preds[0]
     save_dir = "tmp"
     if not os.path.exists(save_dir):
@@ -247,12 +250,13 @@ def handle_generate_image(
     tool_id: str,
     history_messages: List[BaseMessage],
     context: str,
+    image_width=500,
 ) -> Dict[str, str]:
     try:
         func = FUN_MAPPING.get(tool_name, None)
         image, image_url = func(context=context) if func else "No tool provided."
         if image and image_url:
-            st.image(image)
+            st.image(image, width=image_width)
         else:
             st.write("No image generated.")
         # Finished tool call with a function, add result to history,
@@ -288,6 +292,7 @@ def handle_annotate_image(
     history_messages: List[BaseMessage],
     base64_image: bytes,
     image_description: str,
+    image_width=500,
 ) -> Dict[str, str]:
     additional_kwargs = {}
     try:
@@ -298,7 +303,7 @@ def handle_annotate_image(
             else "No tool provided."
         )
         if image_path:
-            st.image(image_path)
+            st.image(image_path, width=image_width)
             additional_kwargs["image_path"] = image_path
         else:
             st.write("No image annotated.")
@@ -330,6 +335,7 @@ def tool_call_proc(
     tool_call: Dict,
     history_messages: List[BaseMessage],
     base64_image: bytes = None,
+    image_width=500,
 ) -> Dict:
     tool_id, tool_name = tool_call["id"], tool_call["name"]
     match tool_name:
@@ -340,6 +346,7 @@ def tool_call_proc(
                 tool_id,
                 history_messages,
                 context,
+                image_width,
             )
             return additional_kwargs
         case "AnnotateImageTool":
@@ -350,6 +357,7 @@ def tool_call_proc(
                 history_messages,
                 base64_image,
                 image_description,
+                image_width,
             )
             return additional_kwargs
         case _:
@@ -360,6 +368,7 @@ def chat_with_model(
     model: BaseChatModel,
     base64_image: bytes = None,
     streaming=False,
+    image_width=500,
 ):
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -371,11 +380,17 @@ def chat_with_model(
             # Keep image rendering while UI is being refreshed.
             additional_kwargs = message.get("additional_kwargs", None)
             if additional_kwargs and "image_url" in additional_kwargs:
-                st.image(image_url_to_image(additional_kwargs["image_url"]))
+                st.image(
+                    image_url_to_image(additional_kwargs["image_url"]),
+                    width=image_width,
+                )
             elif additional_kwargs and "image_path" in additional_kwargs:
-                st.image(additional_kwargs["image_path"])
+                st.image(
+                    additional_kwargs["image_path"],
+                    width=image_width,
+                )
             elif additional_kwargs and "string" in additional_kwargs:
-                st.image(additional_kwargs["string"])
+                st.write(additional_kwargs["string"])
 
     if prompt := st.chat_input("Write...", key="chat_input"):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -414,7 +429,10 @@ def chat_with_model(
                     tool_call = tool_calls[0]
                     if last_ai_msg.content is None or last_ai_msg.content == "":
                         additional_kwargs = tool_call_proc(
-                            tool_call, st.session_state.history.messages, base64_image
+                            tool_call,
+                            st.session_state.history.messages,
+                            base64_image,
+                            image_width,
                         )
 
         st.session_state.messages.append(
@@ -464,8 +482,10 @@ async def main():
         used_model,
         base64_image,
         streaming=st.session_state.get("key_streaming", True),
+        image_width=st.session_state.get("key_width", 300),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
+    image_width = st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
 
 
 if __name__ == "__main__":

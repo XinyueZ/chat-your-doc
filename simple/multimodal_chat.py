@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import uuid
+from datetime import datetime
 from functools import partial
 from inspect import getframeinfo, stack
 from typing import Any, Dict, List, Tuple
@@ -90,7 +91,7 @@ def doc_uploader() -> bytes:
         if not uploaded_doc:
             st.session_state["file_name"] = None
             st.session_state["base64_image"] = None
-            pretty_print("doc_uploader", "No image uploaded")
+            # pretty_print("doc_uploader", "No image uploaded")
             return None
         if uploaded_doc:
             tmp_dir = "./chat-your-doc/tmp/"
@@ -100,15 +101,15 @@ def doc_uploader() -> bytes:
             with open(temp_file_path, "wb") as file:
                 file.write(uploaded_doc.getvalue())
                 file_name = uploaded_doc.name
-                pretty_print("doc_uploader", f"Uploaded {file_name}")
+                # pretty_print("doc_uploader", f"Uploaded {file_name}")
                 uploaded_doc.flush()
                 uploaded_doc.close()
                 # os.remove(temp_file_path)
                 if st.session_state.get("file_name") == file_name:
-                    pretty_print("doc_uploader", "Same file")
+                    # pretty_print("doc_uploader", "Same file")
                     return st.session_state["base64_image"]
 
-                pretty_print("doc_uploader", "New file")
+                # pretty_print("doc_uploader", "New file")
                 st.session_state["file_name"] = temp_file_path
                 with open(temp_file_path, "rb") as image_file:
                     st.session_state["base64_image"] = base64.b64encode(
@@ -168,9 +169,12 @@ class LoadUrlsTool(BaseModel):
     urls: List[str] = Field(description="The URLs to load.")
 
 
-load_urls_prompt_template = PromptTemplate.from_template(
-    """Reponse the query inside [query] based on the context inside [context]:
+@tool("load-urls-tool", args_schema=LoadUrlsTool, return_direct=False)
+def load_urls_tool(retrieval_model: BaseChatModel, query: str, urls: List[str]) -> str:
+    """Load the content of the given Urls for getting responses to the query and return the query result."""
 
+    load_urls_prompt_template = PromptTemplate.from_template(
+        """Reponse the query inside [query] based on the context inside [context]:
 [query]
 {query}
 [query]
@@ -181,12 +185,7 @@ load_urls_prompt_template = PromptTemplate.from_template(
 
 Only return the answer without any instruction text or additional information.
 Keep the result as simple as possible."""
-)
-
-
-@tool("load-urls-tool", args_schema=LoadUrlsTool, return_direct=False)
-def load_urls_tool(retrieval_model: BaseChatModel, query: str, urls: List[str]) -> str:
-    """Load the content of the given Urls and return the query result."""
+    )
     loader = WebBaseLoader(urls)
     docs = loader.load()
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -205,7 +204,7 @@ def load_urls_tool(retrieval_model: BaseChatModel, query: str, urls: List[str]) 
     return chain.invoke(query)
 
 
-agent_tools = [
+search_agent_tools = [
     Tool(
         name="Google Search",
         description="Search Google for recent results.",
@@ -229,16 +228,17 @@ agent_tools = [
         description="Use to search for the information from Wikidata.",
     ),
 ]
+search_agent_tools.extend(load_tools(["arxiv"]))
 
 
-def create_agent(agent_model: BaseChatModel) -> AgentExecutor:
+def create_search_agent(agent_model: BaseChatModel) -> AgentExecutor:
     return AgentExecutor(
         agent=create_structured_chat_agent(
             llm=agent_model,
-            tools=agent_tools,
+            tools=search_agent_tools,
             prompt=hub.pull("hwchase17/structured-chat-agent"),
         ),
-        tools=agent_tools,
+        tools=search_agent_tools,
         handle_parsing_errors=True,
         return_intermediate_steps=True,
     )
@@ -272,7 +272,7 @@ Notice:
 - WHEN the image includes text, it MUST be in the same language as the language of the input text.
 """
     image_gen = agent_executor.invoke({"input": prompt})
-    pretty_print("Image Gen:", image_gen)
+    # pretty_print("Image Gen:", image_gen)
     try:
         image_url = image_gen["output"]
         return image_url_to_image(image_url), image_url
@@ -303,9 +303,9 @@ def annotate_image(
         human_input = template.format_messages(img_desc=image_description)
         return model.invoke(human_input).content
 
-    pretty_print("Image description:", image_description)
+    # pretty_print("Image description:", image_description)
     classes = coco_label_extractor(model, image_description)
-    pretty_print("Classes:", classes)
+    # pretty_print("Classes:", classes)
     classes = classes.split(",") if classes else list()
     model = YOLO(CV_MODEL)  # or select yolov8m/l-world.pt for different sizes
 
@@ -323,21 +323,29 @@ def annotate_image(
     return results, save_path
 
 
-def run_agent(agent: AgentExecutor, known_topic: str) -> Dict[str, Any]:
-    """Run the agent for the unknown topic, the agent will search the topic through the web and return the result."""
-    prompt = f"""Search through the internet for the unknown topic inside >>>>>>>>> and <<<<<<<<<<
+def run_search_agent(agent: AgentExecutor, topic: str) -> Dict[str, Any]:
+    """Run the agent for the topic, the agent will search the topic through the web and return the result."""
+    prompt = f"""Search through the internet for the topic inside >>>>>>>>> and <<<<<<<<<<
 >>>>>>>>>
-{known_topic}
+{topic}
 <<<<<<<<<<
 We recommend certain tools that you can use:
 -  Google Search
 -  DuckDuckGo Search
 -  Wikipedia Search
 -  Wikidata Search
-also if you face some urls you can also use the tool:
+-  arxiv Search
+Also if you face some urls for more details you can also use the tool:
 - load-urls-tool
 """
     return agent.invoke({"input": prompt})
+
+
+def get_current_time(_: str) -> str:
+    """For questions or queries that are relevant to current time or date"""
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return current_time
 
 
 # ------------------------------------------tool------------------------------------------
@@ -359,12 +367,21 @@ class AnnotateImageTool(BaseModel):
     )
 
 
-class RunAgentTool(BaseModel):
-    """Run the agent for the unknown topic, an agent will search the topic through the web and return the result."""
+class RunSearchAgentTool(BaseModel):
+    """Run the agent to search for corresponding topic. The agent will search the web for the topic and return the results."""
 
-    known_topic: str = Field(
+    topic: str = Field(
         ...,
-        description="The known topic to search for the unknown topic, an agent will use this topic to search through the web.",
+        description="The topic to search through the web.",
+    )
+
+
+class GetCurrentTimeTool(BaseModel):
+    """Get the current time."""
+
+    event: str = Field(
+        ...,
+        description="Some questions or queries that are relevant to current time or date",
     )
 
 
@@ -372,10 +389,8 @@ class RunAgentTool(BaseModel):
 def handle_generate_image(
     tool_name: str,
     tool_id: str,
-    history_messages: List[BaseMessage],
     context: str,
-    image_width=500,
-) -> Dict[str, str]:
+) -> ToolMessage:
     additional_kwargs = dict()
     try:
         func = FUN_MAPPING.get(tool_name, None)
@@ -384,44 +399,32 @@ def handle_generate_image(
         else:
             raise ValueError("No tool provided.")
 
-        if image and image_url:
-            st.image(image, width=image_width)
-        else:
-            st.write("No image generated.")
-
         additional_kwargs = {"image_url": image_url} if image_url else {}
-
-        history_messages.append(
-            ToolMessage(
-                content=(
-                    f"Tool called and get image successfully."
-                    if image_url
-                    else "Tool called, nothing was generated"
-                ),
-                tool_call_id=tool_id,
-                additional_kwargs=additional_kwargs,
-            )
+        return ToolMessage(
+            content=(
+                f"Generated image successfully: ![]({image_url})"
+                if image_url
+                else "Tool called, nothing was generated"
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
+
     except Exception as e:
         st.write(f"Something went wrong.\n\n{e}")
-
-        history_messages.append(
-            ToolMessage(
-                content=f"Tool was called but failed to generate image.\n\n{e}",
-                tool_call_id=tool_id,
-            )
+        return ToolMessage(
+            content=f"Tool was called but failed to generate image.\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
-    return additional_kwargs
 
 
 def handle_annotate_image(
     tool_name: str,
     tool_id: str,
-    history_messages: List[BaseMessage],
     base64_image: bytes,
     image_description: str,
-    image_width=500,
-) -> Dict[str, str]:
+) -> ToolMessage:
     additional_kwargs = {}
     try:
         func = FUN_MAPPING.get(tool_name, None)
@@ -432,114 +435,117 @@ def handle_annotate_image(
         else:
             raise ValueError("No tool provided.")
 
-        if image_path:
-            st.image(image_path, width=image_width)
-            additional_kwargs["image_path"] = image_path
-        else:
-            st.write("No image annotated.")
-
-        history_messages.append(
-            ToolMessage(
-                content=(
-                    f"Tool called and annotated the image successfully."
-                    if image_path
-                    else "Tool called, nothing was annotated"
-                ),
-                tool_call_id=tool_id,
-                additional_kwargs=additional_kwargs,
-            )
+        additional_kwargs["image_path"] = image_path if image_path else ""
+        return ToolMessage(
+            content=(
+                f"Annotated image successfully: ![]({image_path})"
+                if image_path
+                else "Tool called, nothing was annotated"
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
+
     except Exception as e:
         st.write(f"Something went wrong.\n\n{e}")
-        history_messages.append(
-            ToolMessage(
-                content=f"Tool was called but failed to annotate image.\n\n{e}",
-                tool_call_id=tool_id,
-            )
+        return ToolMessage(
+            content=f"Tool was called but failed to annotate image.\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
-    return additional_kwargs
 
 
-def handle_agent_for_unknown_topic(
+def handle_search_agent(
     tool_name: str,
     tool_id: str,
-    history_messages: List[BaseMessage],
-    known_topic: str,
-):
+    topic: str,
+) -> ToolMessage:
     additional_kwargs = {}
     try:
         func = FUN_MAPPING.get(tool_name, None)
         if func:
-            agent_res = func(known_topic)
+            agent_res = func(topic)
         else:
             raise ValueError("No tool provided.")
 
-        st.write(agent_res["output"])
         additional_kwargs["string"] = agent_res["output"]
-
-        history_messages.append(
-            ToolMessage(
-                content=(
-                    f"Tool called and get result successfully."
-                    if agent_res["output"] and agent_res["output"] != ""
-                    else "Tool called, nothing was responsed by agent."
-                ),
-                tool_call_id=tool_id,
-                additional_kwargs={"string": agent_res["output"]},
-            )
+        return ToolMessage(
+            content=(
+                f"Searched successfully:\n\n{agent_res['output']}"
+                if agent_res["output"] and agent_res["output"] != ""
+                else "Tool called, nothing was responsed by agent."
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
+
     except Exception as e:
         st.write(f"Something went wrong.\n\n{e}")
-        history_messages.append(
-            ToolMessage(
-                content=f"Tool was called but failed to get result.\n\n{e}",
-                tool_call_id=tool_id,
-            )
+        return ToolMessage(
+            content=f"Tool was called but failed to get result.\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
         )
-    return additional_kwargs
 
 
-# ------------------------------------------chat------------------------------------------
+def handle_get_current_time(
+    tool_name: str,
+    tool_id: str,
+) -> ToolMessage:
+    additional_kwargs = {}
+    try:
+        func = FUN_MAPPING.get(tool_name, None)
+        if func:
+            current_time = func("")
+        else:
+            raise ValueError("No tool provided.")
+
+        additional_kwargs["string"] = f"Current time: {current_time}"
+        return ToolMessage(
+            content=(
+                f"Get current time: {current_time}, finished."
+                if current_time and current_time != ""
+                else "Tool called, nothing was responsed by agent."
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+    except Exception as e:
+        st.write(f"Something went wrong.\n\n{e}")
+        return ToolMessage(
+            content=f"Tool was called but failed to get current time.\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+
+# ------------------------------------------chat-----------------------------------------------
 def tool_call_proc(
     tool_call: Dict,
-    history_messages: List[BaseMessage],
     base64_image: bytes = None,
-    image_width=500,
-) -> Dict:
+) -> ToolMessage:
     tool_id, tool_name = tool_call["id"], tool_call["name"]
     match tool_name:
         case "GenerateImageTool":
             context = tool_call["args"]["context"]
-            additional_kwargs = handle_generate_image(
-                tool_name,
-                tool_id,
-                history_messages,
-                context,
-                image_width,
-            )
-            return additional_kwargs
+            return handle_generate_image(tool_name, tool_id, context)
         case "AnnotateImageTool":
             image_description = tool_call["args"]["image_description"]
-            additional_kwargs = handle_annotate_image(
-                tool_name,
-                tool_id,
-                history_messages,
-                base64_image,
-                image_description,
-                image_width,
+            return handle_annotate_image(
+                tool_name, tool_id, base64_image, image_description
             )
-            return additional_kwargs
-        case "RunAgentTool":
-            known_topic = tool_call["args"]["known_topic"]
-            additional_kwargs = handle_agent_for_unknown_topic(
-                tool_name,
-                tool_id,
-                history_messages,
-                known_topic,
-            )
-            return additional_kwargs
+        case "RunSearchAgentTool":
+            topic = tool_call["args"]["topic"]
+            return handle_search_agent(tool_name, tool_id, topic)
+        case "GetCurrentTimeTool":
+            return handle_get_current_time(tool_name, tool_id)
         case _:
-            return {}
+            return ToolMessage(
+                content=f"Handle the UNKNOWN tool call: {tool_name}",
+                tool_call_id=tool_id,
+                additional_kwargs=dict(),
+            )
 
 
 def chat_with_model(
@@ -553,22 +559,16 @@ def chat_with_model(
     if "history" not in st.session_state:
         st.session_state.history = ChatMessageHistory()
     for message in st.session_state.messages:
+        # pretty_print("message", message)
+        if message["role"] == "tool":
+            if message["additional_kwargs"].get("image_path"):
+                with st.chat_message("assistant"):
+                    st.image(
+                        message["additional_kwargs"]["image_path"], width=image_width
+                    )
+            continue
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            # Keep image rendering while UI is being refreshed.
-            additional_kwargs = message.get("additional_kwargs", None)
-            if additional_kwargs and "image_url" in additional_kwargs:
-                st.image(
-                    image_url_to_image(additional_kwargs["image_url"]),
-                    width=image_width,
-                )
-            elif additional_kwargs and "image_path" in additional_kwargs:
-                st.image(
-                    additional_kwargs["image_path"],
-                    width=image_width,
-                )
-            elif additional_kwargs and "string" in additional_kwargs:
-                st.write(additional_kwargs["string"])
 
     if prompt := st.chat_input("Write...", key="chat_input"):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -576,50 +576,81 @@ def chat_with_model(
             st.markdown(prompt)
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                chat_chain = RunnableWithMessageHistory(
-                    create_chain(
-                        model,
-                        base64_image,
-                    ),
-                    lambda _: st.session_state.history,
-                    input_messages_key="query",
-                    history_messages_key="history",
-                )
-                out_met = chat_chain.invoke if not streaming else chat_chain.stream
-                res = out_met(
-                    {"query": prompt},
-                    {"configurable": {"session_id": None}},
-                )
-                content, additional_kwargs = None, dict()
-                if not streaming:
-                    content = res.content
-                    st.write(content)
-                else:
-                    content = st.write_stream(res)
-                pretty_print("history", st.session_state.history)
-                if (
-                    len(st.session_state.history.messages) > 1
-                    and len(st.session_state.history.messages[-1].tool_calls) > 0
-                ):
+
+                should_continue, tool_message = True, None
+                while should_continue:
+                    if not tool_message:
+                        chat_chain = RunnableWithMessageHistory(
+                            create_chain(
+                                model,
+                                base64_image,
+                            ),
+                            lambda _: st.session_state.history,
+                            input_messages_key="query",
+                            history_messages_key="history",
+                        )
+                        call_model = (
+                            chat_chain.invoke if not streaming else chat_chain.stream
+                        )
+                        res = call_model(
+                            {"query": prompt},
+                            {"configurable": {"session_id": None}},
+                        )
+                    else:
+                        chat_chain = RunnableWithMessageHistory(
+                            model, lambda _: st.session_state.history
+                        )
+                        call_model = (
+                            chat_chain.invoke if not streaming else chat_chain.stream
+                        )
+                        res = call_model(
+                            {None: [tool_message]},
+                            {"configurable": {"session_id": None}},
+                        )
+                        st.session_state.history.messages.insert(-1, tool_message)
+
+                    content, additional_kwargs, tool_calls = None, dict(), None
+                    if not streaming:
+                        content = res.content
+                        st.markdown(content)
+                    else:
+                        content = st.write_stream(res)
+
+                    pretty_print("history", st.session_state.history)
                     last_ai_msg = st.session_state.history.messages[-1]
-                    tool_calls = last_ai_msg.tool_calls
-                    streaming = False
-                    tool_call = tool_calls[0]
-                    if last_ai_msg.content is None or last_ai_msg.content == "":
-                        additional_kwargs = tool_call_proc(
-                            tool_call,
-                            st.session_state.history.messages,
-                            base64_image,
-                            image_width,
+
+                    def _has_tool_calls() -> bool:
+                        return (
+                            len(st.session_state.history.messages) > 1
+                            and len(last_ai_msg.tool_calls) > 0
                         )
 
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": content,
-                "additional_kwargs": additional_kwargs,
-            }
-        )
+                    if _has_tool_calls():
+                        tool_calls = last_ai_msg.tool_calls
+                        tool_call = tool_calls[-1]
+                        streaming = False
+                        tool_message = tool_call_proc(tool_call, base64_image)
+                        additional_kwargs = tool_message.additional_kwargs
+                        if additional_kwargs.get("image_path"):
+                            st.image(
+                                additional_kwargs.get("image_path"),
+                                width=image_width,
+                            )
+                        should_continue = True
+                    else:
+                        tool_message = None
+                        should_continue = False
+
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant" if not tool_message else "tool",
+                            "content": (
+                                content if not tool_message else tool_message.content
+                            ),
+                            "tool_calls": tool_calls,
+                            "additional_kwargs": additional_kwargs,
+                        }
+                    )
 
 
 # ------------------------------------------main, app entry------------------------------------------
@@ -654,14 +685,23 @@ async def main():
         annotate_image,
         used_model,
     )
-    partial_run_agent = partial(run_agent, create_agent(used_model))
-    agent_tools.extend([partial(load_urls_tool, used_model)])
+    partial_run_search_agent = partial(
+        run_search_agent, create_search_agent(used_model)
+    )
+    search_agent_tools.extend([partial(load_urls_tool, used_model)])
 
     FUN_MAPPING["GenerateImageTool"] = partial_generate_image
     FUN_MAPPING["AnnotateImageTool"] = partial_annotate_image
-    FUN_MAPPING["RunAgentTool"] = partial_run_agent
+    FUN_MAPPING["RunSearchAgentTool"] = partial_run_search_agent
+    FUN_MAPPING["GetCurrentTimeTool"] = get_current_time
+
     used_model = used_model.bind_tools(
-        [GenerateImageTool, AnnotateImageTool, RunAgentTool]
+        [
+            GenerateImageTool,
+            AnnotateImageTool,
+            RunSearchAgentTool,
+            GetCurrentTimeTool,
+        ]
     )
     ########################################################################
     chat_with_model(

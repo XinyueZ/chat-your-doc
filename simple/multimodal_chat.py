@@ -577,9 +577,9 @@ def chat_with_model(
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
 
-                should_continue, tool_message = True, None
+                should_continue, tool_messages = True, None
                 while should_continue:
-                    if not tool_message:
+                    if not tool_messages:
                         chat_chain = RunnableWithMessageHistory(
                             create_chain(
                                 model,
@@ -604,10 +604,15 @@ def chat_with_model(
                             chat_chain.invoke if not streaming else chat_chain.stream
                         )
                         res = call_model(
-                            {None: [tool_message]},
+                            {None: tool_messages},
                             {"configurable": {"session_id": None}},
                         )
-                        st.session_state.history.messages.insert(-1, tool_message)
+                        st.session_state.history.messages = (
+                            st.session_state.history.messages[:-1]
+                            + tool_messages
+                            + st.session_state.history.messages[-1:]
+                        )
+                        del tool_messages
 
                     content, additional_kwargs, tool_calls = None, dict(), None
                     if not streaming:
@@ -620,37 +625,45 @@ def chat_with_model(
                     last_ai_msg = st.session_state.history.messages[-1]
 
                     def _has_tool_calls() -> bool:
-                        return (
-                            len(st.session_state.history.messages) > 1
-                            and len(last_ai_msg.tool_calls) > 0
-                        )
+                        return len(last_ai_msg.tool_calls) > 0
 
-                    if _has_tool_calls():
-                        tool_calls = last_ai_msg.tool_calls
-                        tool_call = tool_calls[-1]
-                        streaming = False
-                        tool_message = tool_call_proc(tool_call, base64_image)
-                        additional_kwargs = tool_message.additional_kwargs
+                    async def _run_tool_call_proc(tool_call: Dict) -> ToolMessage:
+                        tool_msg = tool_call_proc(tool_call, base64_image)
+                        additional_kwargs = tool_msg.additional_kwargs
                         if additional_kwargs.get("image_path"):
                             st.image(
                                 additional_kwargs.get("image_path"),
                                 width=image_width,
                             )
-                        should_continue = True
+                        return tool_msg
+
+                    if _has_tool_calls():
+                        streaming, should_continue = False, True
+                        tool_calls = last_ai_msg.tool_calls
+                        tasks = [
+                            _run_tool_call_proc(tool_call) for tool_call in tool_calls
+                        ]
+                        tool_messages = asyncio.run(asyncio.gather(*tasks))
                     else:
-                        tool_message = None
                         should_continue = False
 
-                    st.session_state.messages.append(
-                        {
-                            "role": "assistant" if not tool_message else "tool",
-                            "content": (
-                                content if not tool_message else tool_message.content
-                            ),
-                            "tool_calls": tool_calls,
-                            "additional_kwargs": additional_kwargs,
-                        }
-                    )
+                    if not _has_tool_calls():
+                        st.session_state.messages.append(
+                            {
+                                "role": "assistant",
+                                "content": content,
+                                "additional_kwargs": additional_kwargs,
+                            }
+                        )
+                    else:
+                        for tool_msg in tool_messages:
+                            st.session_state.messages.append(
+                                {
+                                    "role": "tool",
+                                    "content": tool_msg.content,
+                                    "additional_kwargs": additional_kwargs,
+                                }
+                            )
 
 
 # ------------------------------------------main, app entry------------------------------------------

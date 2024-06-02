@@ -22,6 +22,7 @@ Chat Your Doc is an experimental project aimed at exploring various applications
   - [Intermediate](#intermediate)
   - [Advanced](#advanced)
 - [Notebooks](#notebooks)
+- [Star History](#star-history)
 
 ----
 
@@ -221,3 +222,14 @@ Chroma, FAISS
 | [agent_gpu_demand_prediction.ipynb](notebooks/agent_gpu_demand_prediction.ipynb)  | Use pure Agent (LangChain) to generate a report paper of global GPU demand prediction. | [read](https://medium.com/@teetracker/langchain-use-llm-agent-for-world-gpu-supply-and-demand-analysis-report-52f93f7bc8e8),![](assets/guide/agent_gpu_demand_prediction_1.webp),![](assets/guide/agent_gpu_demand_prediction_2.webp) | 
 | [multi_user_conversation.ipynb](notebooks/multi_user_conversation.ipynb)  | Try to do multi-user chat with LangChain, `ConversationBufferMemory`, `ConversationChain`, `RunnableWithMessageHistory`, `ChatMessageHistory`, `convert_openai_messages` and LCEL | [read](https://medium.com/@teetracker/langchain-multi-user-conversation-1ea1c8671e33) [read (Follow-up)](https://teetracker.medium.com/langchain-multi-user-conversation-follow-up-9cc277eb445f)| 
 | [DenseXRetrieval.ipynb](notebooks/DenseXRetrieval.ipynb)  | [Dense X Retrieval: What Retrieval Granularity Should We Use?](https://arxiv.org/abs/2312.06648) by using [Llama Packs](https://docs.llamaindex.ai/en/latest/community/llama_packs/) | | 
+
+
+# Star History
+
+<br>
+<div align="left">
+
+<img src="https://api.star-history.com/svg?repos=XinyueZ/chat-your-doc&type=Date" width="500px">
+
+</div>
+<br>

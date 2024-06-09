@@ -11,8 +11,10 @@ from typing import Any, Dict, List, Tuple
 
 import nest_asyncio
 import numpy as np
+import pandas as pd
 import requests
 import streamlit as st
+import yfinance
 from langchain import hub
 from langchain.agents import Tool, load_tools
 from langchain.agents.agent import AgentExecutor
@@ -41,6 +43,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from matplotlib import pyplot as plt
 from PIL import Image, UnidentifiedImageError
 from rich.pretty import pprint
 from ultralytics import YOLO
@@ -123,14 +126,15 @@ def doc_uploader() -> bytes:
 # ------------------------------------------LLM Chain------------------------------------------
 
 
-def create_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
+def create_message_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(
                 content=[
                     {
                         "type": "text",
-                        "text": """As a helpful assistant, you should respond to the user's query.""",
+                        "text": """As a helpful assistant, you should respond to the user's query.
+Avoid giving any information related to the local file system or sandbox.""",
                     }
                 ]
             ),
@@ -161,6 +165,10 @@ def create_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
         ]
     )
     return prompt | model
+
+
+def create_tool_chain(model: BaseChatModel) -> Runnable:
+    return model
 
 
 # ------------------------------------------agent, functions, tools------------------------------------------
@@ -348,6 +356,55 @@ def get_current_time(_: str) -> str:
     return current_time
 
 
+def get_and_plot_stock_prices(
+    stock_symbols: List[str], start_date: str, end_date: str
+) -> Tuple[pd.DataFrame, str]:
+    """Get and plot the stock prices for the given stock symbols between
+    the start and end dates.
+
+    Args:
+        stock_symbols (str or list): The stock symbols to get the
+        prices for.
+        start_date (str): The start date in the format
+        'YYYY-MM-DD'.
+        end_date (str): The end date in the format 'YYYY-MM-DD'.
+
+    Returns:
+            Tuple:
+                pandas.DataFrame: The stock prices for the given stock symbols indexed by date, with one column per stock symbol.
+                stock_prices (pandas.DataFrame): The stock prices for the
+                given stock symbols.
+    """
+
+    def _plot_stock_prices(stock_prices: pd.DataFrame, filename: str):
+        """Plot the stock prices for the given stock symbols.
+        Args:
+            stock_prices (pandas.DataFrame): The stock prices for the given stock symbols.
+            filename (str): The filename to save the plot to.
+
+        """
+        plt.figure(figsize=(10, 5))
+        for column in stock_prices.columns:
+            plt.plot(stock_prices.index, stock_prices[column], label=column)
+        plt.title("Stock Prices")
+        plt.xlabel("Date")
+        plt.ylabel("Price")
+        plt.legend(stock_prices)
+        plt.grid(True)
+        plt.savefig(filename)
+
+    stock_data = yfinance.download(stock_symbols, start=start_date, end=end_date)
+    pretty_print("stock_data:", stock_data)
+    prices_df = stock_data.get("Close")
+    pretty_print("Close:", prices_df)
+
+    plot_filename = create_random_filename(ext=".png")
+    fullpath = f"./tmp/{plot_filename}"
+
+    _plot_stock_prices(prices_df, fullpath)
+    return (prices_df, fullpath)
+
+
 # ------------------------------------------tool------------------------------------------
 class GenerateImageTool(BaseModel):
     """Generate an image to illustrate for user request."""
@@ -385,6 +442,23 @@ class GetCurrentTimeTool(BaseModel):
     )
 
 
+class GetAndPlotStockPrices(BaseModel):
+    """Get and plot the stock prices for the given stock symbols between the start and end dates."""
+
+    stock_symbols: str = Field(
+        ...,
+        description="The stock symbols list string to get prices for, should be a string with comma-separated different symbols.",
+    )
+    start_date: str = Field(
+        ...,
+        description="The start date in the format 'YYYY-MM-DD' or other understandable format.",
+    )
+    end_date: str = Field(
+        ...,
+        description="The end date in the format 'YYYY-MM-DD' or other understandable format.",
+    )
+
+
 # ------------------------------------------model event handlers------------------------------------------
 def handle_generate_image(
     tool_name: str,
@@ -402,7 +476,7 @@ def handle_generate_image(
         additional_kwargs = {"image_url": image_url} if image_url else {}
         return ToolMessage(
             content=(
-                f"Generated image successfully: ![]({image_url})"
+                f"Generated image successfully, tool has finished: ![]({image_url})"
                 if image_url
                 else "Tool called, nothing was generated"
             ),
@@ -438,7 +512,7 @@ def handle_annotate_image(
         additional_kwargs["image_path"] = image_path if image_path else ""
         return ToolMessage(
             content=(
-                f"Annotated image successfully: ![]({image_path})"
+                f"Annotated image successfully, tool has finished."
                 if image_path
                 else "Tool called, nothing was annotated"
             ),
@@ -471,7 +545,7 @@ def handle_search_agent(
         additional_kwargs["string"] = agent_res["output"]
         return ToolMessage(
             content=(
-                f"Searched successfully:\n\n{agent_res['output']}"
+                f"Searched successfully, tool has finished:\n\n{agent_res['output']}"
                 if agent_res["output"] and agent_res["output"] != ""
                 else "Tool called, nothing was responsed by agent."
             ),
@@ -503,7 +577,7 @@ def handle_get_current_time(
         additional_kwargs["string"] = f"Current time: {current_time}"
         return ToolMessage(
             content=(
-                f"Get current time: {current_time}, finished."
+                f"Get current time: {current_time}, tool has finished."
                 if current_time and current_time != ""
                 else "Tool called, nothing was responsed by agent."
             ),
@@ -515,6 +589,47 @@ def handle_get_current_time(
         st.write(f"Something went wrong.\n\n{e}")
         return ToolMessage(
             content=f"Tool was called but failed to get current time.\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+
+def handle_get_stock_prices(
+    tool_name: str,
+    tool_id: str,
+    tool_stock_symbols: str,
+    tool_start_date: str,
+    tool_end_date: str,
+) -> ToolMessage:
+    additional_kwargs = {}
+    try:
+        func = FUN_MAPPING.get("GetAndPlotStockPrices", None)
+        if func:
+            prices_df, image_path = func(
+                stock_symbols=tool_stock_symbols.split(","),
+                start_date=tool_start_date,
+                end_date=tool_end_date,
+            )
+        else:
+            raise ValueError("No tool provided.")
+
+        additional_kwargs["image_path"], additional_kwargs["dataframe"] = (
+            image_path,
+            prices_df,
+        )
+
+        return ToolMessage(
+            content=f"""Complete getting stock prices successfully, tool has finished, stop further investigation. The stock prices requested:
+dataframe:
+{prices_df}""",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+    except Exception as e:
+        st.write(f"Something went wrong.\n\n{e}")
+        return ToolMessage(
+            content=f"Tool was called but failed to get stock prices completely: {e}",
             tool_call_id=tool_id,
             additional_kwargs=additional_kwargs,
         )
@@ -540,6 +655,14 @@ def tool_call_proc(
             return handle_search_agent(tool_name, tool_id, topic)
         case "GetCurrentTimeTool":
             return handle_get_current_time(tool_name, tool_id)
+        case "GetAndPlotStockPrices":
+            now = datetime.now()
+            tool_stock_symbols = tool_call["args"]["stock_symbols"]
+            tool_start_date = tool_call["args"].get("start_date", now)
+            tool_end_date = tool_call["args"].get("end_date", now)
+            return handle_get_stock_prices(
+                tool_name, tool_id, tool_stock_symbols, tool_start_date, tool_end_date
+            )
         case _:
             return ToolMessage(
                 content=f"Handle the UNKNOWN tool call: {tool_name}",
@@ -566,9 +689,9 @@ def chat_with_model(
                     st.image(
                         message["additional_kwargs"]["image_path"], width=image_width
                     )
-            continue
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        else:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
     if prompt := st.chat_input("Write...", key="chat_input"):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -581,7 +704,7 @@ def chat_with_model(
                 while should_continue:
                     if not tool_messages:
                         chat_chain = RunnableWithMessageHistory(
-                            create_chain(
+                            create_message_chain(
                                 model,
                                 base64_image,
                             ),
@@ -598,7 +721,7 @@ def chat_with_model(
                         )
                     else:
                         chat_chain = RunnableWithMessageHistory(
-                            model, lambda _: st.session_state.history
+                            create_tool_chain(model), lambda _: st.session_state.history
                         )
                         call_model = (
                             chat_chain.invoke if not streaming else chat_chain.stream
@@ -661,7 +784,7 @@ def chat_with_model(
                                 {
                                     "role": "tool",
                                     "content": tool_msg.content,
-                                    "additional_kwargs": additional_kwargs,
+                                    "additional_kwargs": tool_msg.additional_kwargs,
                                 }
                             )
 
@@ -707,6 +830,7 @@ async def main():
     FUN_MAPPING["AnnotateImageTool"] = partial_annotate_image
     FUN_MAPPING["RunSearchAgentTool"] = partial_run_search_agent
     FUN_MAPPING["GetCurrentTimeTool"] = get_current_time
+    FUN_MAPPING["GetAndPlotStockPrices"] = get_and_plot_stock_prices
 
     used_model = used_model.bind_tools(
         [
@@ -714,6 +838,7 @@ async def main():
             AnnotateImageTool,
             RunSearchAgentTool,
             GetCurrentTimeTool,
+            GetAndPlotStockPrices,
         ]
     )
     ########################################################################

@@ -9,12 +9,17 @@ from functools import partial
 from inspect import getframeinfo, stack
 from typing import Any, Dict, List, Tuple
 
+import filetype
 import nest_asyncio
 import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+import torch
 import yfinance
+from audiocraft.data.audio import audio_write
+from audiocraft.models import musicgen
+from audiocraft.utils.notebook import display_audio
 from langchain import hub
 from langchain.agents import Tool, load_tools
 from langchain.agents.agent import AgentExecutor
@@ -44,8 +49,11 @@ from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from matplotlib import pyplot as plt
+from mutagen.mp3 import MP3
+from openai import OpenAI
 from PIL import Image, UnidentifiedImageError
 from rich.pretty import pprint
+from transformers import pipeline
 from ultralytics import YOLO
 from ultralytics.engine.results import Boxes, Results
 
@@ -55,6 +63,8 @@ MAX_TOKEN = 2048
 OPENAI_LLM = "gpt-4o"
 GOOGLE_LLM = "gemini-1.5-flash-latest"
 CV_MODEL: str = "yolov8s-world.pt"
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 FUN_MAPPING = {}
 
@@ -88,12 +98,20 @@ def create_random_name() -> str:
     return str(uuid.uuid4())
 
 
-def doc_uploader() -> bytes:
+# enum class for audio or image
+class MediaType:
+    AUDIO = "audio"
+    IMAGE = "image"
+
+
+def doc_uploader() -> Tuple[bytes, str]:
     with st.sidebar:
-        uploaded_doc = st.file_uploader("# Upload one image", key="doc_uploader")
+        uploaded_doc = st.file_uploader(
+            "# Upload one image or an audio file", key="doc_uploader"
+        )
         if not uploaded_doc:
             st.session_state["file_name"] = None
-            st.session_state["base64_image"] = None
+            st.session_state["base64_object"] = None
             # pretty_print("doc_uploader", "No image uploaded")
             return None
         if uploaded_doc:
@@ -104,29 +122,44 @@ def doc_uploader() -> bytes:
             with open(temp_file_path, "wb") as file:
                 file.write(uploaded_doc.getvalue())
                 file_name = uploaded_doc.name
+                media_type = (
+                    MediaType.IMAGE
+                    if filetype.is_image(temp_file_path)
+                    else MediaType.AUDIO
+                )
+
                 # pretty_print("doc_uploader", f"Uploaded {file_name}")
                 uploaded_doc.flush()
                 uploaded_doc.close()
                 # os.remove(temp_file_path)
                 if st.session_state.get("file_name") == file_name:
                     # pretty_print("doc_uploader", "Same file")
-                    return st.session_state["base64_image"]
+                    return st.session_state["base64_object"]
 
                 # pretty_print("doc_uploader", "New file")
                 st.session_state["file_name"] = temp_file_path
                 with open(temp_file_path, "rb") as image_file:
-                    st.session_state["base64_image"] = base64.b64encode(
+                    st.session_state["base64_object"] = base64.b64encode(
                         image_file.read()
                     ).decode("utf-8")
 
-                return st.session_state["base64_image"]
+                return st.session_state["base64_object"], media_type
         return None
 
 
 # ------------------------------------------LLM Chain------------------------------------------
 
 
-def create_message_chain(model: BaseChatModel, base64_image: bytes) -> Runnable:
+def create_message_chain(
+    model: BaseChatModel,
+    base64_object: bytes,
+    media_type: str,
+) -> Runnable:
+    handle_image = media_type == MediaType.IMAGE
+    handle_audio = media_type == MediaType.AUDIO
+    pretty_print("handle_image", handle_image)
+    pretty_print("handle_audio", handle_audio)
+
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(
@@ -149,16 +182,13 @@ Avoid giving any information related to the local file system or sandbox.""",
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "url": f"data:image/jpeg;base64,{base64_object}",
                             },
                         },
                     ]
-                    if base64_image
+                    if handle_image
                     else [
-                        {
-                            "type": "text",
-                            "text": "{query}",
-                        },
+                        {"type": "text", "text": "{query}"},
                     ]
                 )
             ),
@@ -405,6 +435,78 @@ def get_and_plot_stock_prices(
     return (prices_df, fullpath)
 
 
+def text2speech(text: str, voice_type: str = "alloy") -> str:
+    """Convert text to speech, return the full filepath to the speech."""
+    client = OpenAI()
+    random_filename = create_random_filename(".mp3")
+    speech_file_path = f"./tmp/{random_filename}"
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice=voice_type,
+        input=text,
+    )
+    response.stream_to_file(speech_file_path)
+    return speech_file_path
+
+
+def text2music(prompt: str) -> str:
+    """Convert prompting text to music, return the full filepath to the music."""
+
+    def _write_wav(output, file_initials):
+        try:
+            for idx, one_wav in enumerate(output):
+                audio_write(
+                    f"{file_initials}_{idx}",
+                    one_wav.cpu(),
+                    model.sample_rate,
+                    strategy="loudness",
+                    loudness_compressor=True,
+                )
+            return True
+        except Exception as e:
+            print("Error while writing the file ", e)
+            return None
+
+    model = musicgen.MusicGen.get_pretrained("medium", device=DEVICE)
+    model.set_generation_params(duration=30)
+    musicgen_out = model.generate([prompt], progress=True)
+    musicgen_out_filename = f"./tmp/{create_random_name()}"
+    _write_wav(musicgen_out, musicgen_out_filename)
+    return f"{musicgen_out_filename}_0.wav"
+
+
+def speech2text(base64_speech_audio: bytes) -> str:
+    """Convert base64_speech_audio to text, extract the base64_speech_audio content, and provide the text as return."""
+    audio_file_name = "./tmp/temp.wav"
+    audio_file = open(audio_file_name, "wb")
+    bytes_io = io.BytesIO(base64.b64decode(base64_speech_audio))
+    audio_file.write(bytes_io.read())
+    torch_dtype = torch.float32 if DEVICE == "cpu" else torch.float16
+    pipe_aud2txt = pipeline(
+        "automatic-speech-recognition",
+        "openai/whisper-large-v3",
+        torch_dtype=torch_dtype,
+        device=DEVICE,
+    )
+    res = pipe_aud2txt(audio_file_name)
+    return res.get("text")
+
+
+def synthesize_audio(speech_text: str, prompt: str, voice_type: str = "alloy") -> str:
+    """Generate an audio using the provided speech_text and background music audio generated from the prompt.
+    Generate an audio from the speech_text and another background music from the prompt, then combine the two audioes
+    into a single synthesis.
+    """
+    text2speech_file_fullpath = text2speech(speech_text, voice_type)
+    text2music_file_fullpath = text2music(prompt)
+    synthesis_filename = f"./tmp/{create_random_filename('.mp3')}"
+
+    os.system(
+        f"ffmpeg -i {text2speech_file_fullpath} -stream_loop -1 -i {text2music_file_fullpath}  -filter_complex amix=inputs=2:duration=first:dropout_transition=2 {synthesis_filename} -y"
+    )
+    return synthesis_filename
+
+
 # ------------------------------------------tool------------------------------------------
 class GenerateImageTool(BaseModel):
     """Generate an image to illustrate for user request."""
@@ -456,6 +558,43 @@ class GetAndPlotStockPrices(BaseModel):
     end_date: str = Field(
         ...,
         description="The end date in the format 'YYYY-MM-DD' or other understandable format.",
+    )
+
+
+class Text2SpeechTool(BaseModel):
+    """Convert text to speech."""
+
+    text: str = Field(
+        ...,
+        description="The text that will be converted to speech.",
+    )
+
+
+class Text2MusicTool(BaseModel):
+    """Tool for generating music via text prompting."""
+
+    prompt: str = Field(
+        ...,
+        description="Use the prompt text to generate music.",
+    )
+
+
+class Speech2TextTool(BaseModel):
+    """Extract speech audio content to text."""
+
+    pass
+
+
+class SynthesizeAudioTool(BaseModel):
+    """Synthesize audio based on the provided speech_text and prompt."""
+
+    speech_text: str = Field(
+        ...,
+        description="The text that will be converted to speech.",
+    )
+    prompt: str = Field(
+        None,
+        description="The prompt that will be used to generate background music audio, if not set, the prompt will be the same as the speech_text.",
     )
 
 
@@ -603,7 +742,7 @@ def handle_get_stock_prices(
 ) -> ToolMessage:
     additional_kwargs = {}
     try:
-        func = FUN_MAPPING.get("GetAndPlotStockPrices", None)
+        func = FUN_MAPPING.get(tool_name, None)
         if func:
             prices_df, image_path = func(
                 stock_symbols=tool_stock_symbols.split(","),
@@ -635,10 +774,75 @@ dataframe:
         )
 
 
+def handle_text2audio(
+    tool_name: str,
+    tool_id: str,
+    **kvargs,
+) -> ToolMessage:
+    additional_kwargs = {}
+    try:
+        func = FUN_MAPPING.get(tool_name, None)
+        if func:
+            audio_path = func(**kvargs)
+        else:
+            raise ValueError("No tool provided.")
+
+        additional_kwargs["audio_path"] = audio_path
+        return ToolMessage(
+            content=(
+                f"Audio has been generated successfully, tool has finished, an audio path: {audio_path}"
+                if audio_path and audio_path != ""
+                else "Tool called, nothing was responsed by model."
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+    except Exception as e:
+        st.write(f"Something went wrong.\n\n{e}")
+        return ToolMessage(
+            content=f"Tool was called but failed for:\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+
+def handle_speech2text(
+    tool_name: str,
+    tool_id: str,
+    base64_speech_audio: bytes,
+) -> ToolMessage:
+    additional_kwargs = {}
+    try:
+        func = FUN_MAPPING.get(tool_name, None)
+        if func:
+            text = func(base64_speech_audio)
+        else:
+            raise ValueError("No tool provided.")
+
+        additional_kwargs["string"] = text
+        return ToolMessage(
+            content=(
+                f"Speech to Text successfully, tool has finished, output text:\n\n{text}"
+                if text and text != ""
+                else "Tool called, nothing was responsed by model."
+            ),
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+    except Exception as e:
+        st.write(f"Something went wrong.\n\n{e}")
+        return ToolMessage(
+            content=f"Tool was called but failed for:\n\n{e}",
+            tool_call_id=tool_id,
+            additional_kwargs=additional_kwargs,
+        )
+
+
 # ------------------------------------------chat-----------------------------------------------
 def tool_call_proc(
     tool_call: Dict,
-    base64_image: bytes = None,
+    base64_object: bytes = None,
 ) -> ToolMessage:
     tool_id, tool_name = tool_call["id"], tool_call["name"]
     match tool_name:
@@ -648,11 +852,25 @@ def tool_call_proc(
         case "AnnotateImageTool":
             image_description = tool_call["args"]["image_description"]
             return handle_annotate_image(
-                tool_name, tool_id, base64_image, image_description
+                tool_name, tool_id, base64_object, image_description
             )
         case "RunSearchAgentTool":
             topic = tool_call["args"]["topic"]
             return handle_search_agent(tool_name, tool_id, topic)
+        case "Text2SpeechTool":
+            text = tool_call["args"]["text"]
+            return handle_text2audio(tool_name, tool_id, text=text)
+        case "Text2MusicTool":
+            prompt = tool_call["args"]["prompt"]
+            return handle_text2audio(tool_name, tool_id, prompt=prompt)
+        case "SynthesizeAudioTool":
+            speech_text = tool_call["args"]["speech_text"]
+            prompt = tool_call["args"].get("prompt", speech_text)
+            return handle_text2audio(
+                tool_name, tool_id, speech_text=speech_text, prompt=prompt
+            )
+        case "Speech2TextTool":
+            return handle_speech2text(tool_name, tool_id, base64_object)
         case "GetCurrentTimeTool":
             return handle_get_current_time(tool_name, tool_id)
         case "GetAndPlotStockPrices":
@@ -673,9 +891,11 @@ def tool_call_proc(
 
 def chat_with_model(
     model: BaseChatModel,
-    base64_image: bytes = None,
+    base64_object: bytes = None,
+    media_type: str = None,
     streaming=False,
     image_width=500,
+    audio_auto_play=True,
 ):
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -688,6 +908,12 @@ def chat_with_model(
                 with st.chat_message("assistant"):
                     st.image(
                         message["additional_kwargs"]["image_path"], width=image_width
+                    )
+            if message["additional_kwargs"].get("audio_path"):
+                with st.chat_message("assistant"):
+                    st.audio(
+                        message["additional_kwargs"]["audio_path"],
+                        autoplay=audio_auto_play,
                     )
         else:
             with st.chat_message(message["role"]):
@@ -706,7 +932,8 @@ def chat_with_model(
                         chat_chain = RunnableWithMessageHistory(
                             create_message_chain(
                                 model,
-                                base64_image,
+                                base64_object,
+                                media_type,
                             ),
                             lambda _: st.session_state.history,
                             input_messages_key="query",
@@ -751,12 +978,17 @@ def chat_with_model(
                         return len(last_ai_msg.tool_calls) > 0
 
                     async def _run_tool_call_proc(tool_call: Dict) -> ToolMessage:
-                        tool_msg = tool_call_proc(tool_call, base64_image)
+                        tool_msg = tool_call_proc(tool_call, base64_object)
                         additional_kwargs = tool_msg.additional_kwargs
                         if additional_kwargs.get("image_path"):
                             st.image(
                                 additional_kwargs.get("image_path"),
                                 width=image_width,
+                            )
+                        if additional_kwargs.get("audio_path"):
+                            st.audio(
+                                additional_kwargs.get("audio_path"),
+                                autoplay=audio_auto_play,
                             )
                         return tool_msg
 
@@ -791,9 +1023,16 @@ def chat_with_model(
 
 # ------------------------------------------main, app entry------------------------------------------
 async def main():
-    base64_image = doc_uploader()
-    if base64_image:
-        st.sidebar.image(st.session_state["file_name"], use_column_width=True)
+    base64_object, media_type, uploaded = None, None, doc_uploader()
+    if uploaded is not None:
+        base64_object, media_type = uploaded[0], uploaded[1]
+        if media_type == MediaType.IMAGE:
+            st.sidebar.image(st.session_state["file_name"], use_column_width=True)
+        else:
+            st.sidebar.audio(st.session_state["file_name"])
+    else:
+        pretty_print("uploaded", False)
+
     temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
     model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini Pro"], index=0)
     if model_sel == "Gemini Pro":
@@ -824,11 +1063,21 @@ async def main():
     partial_run_search_agent = partial(
         run_search_agent, create_search_agent(used_model)
     )
+    partial_text2speech = partial(
+        text2speech, voice_type=st.session_state.get("voice_types", "alloy")
+    )
+    partial_synthesize_audio = partial(
+        synthesize_audio, voice_type=st.session_state.get("voice_types", "alloy")
+    )
     search_agent_tools.extend([partial(load_urls_tool, used_model)])
 
     FUN_MAPPING["GenerateImageTool"] = partial_generate_image
     FUN_MAPPING["AnnotateImageTool"] = partial_annotate_image
     FUN_MAPPING["RunSearchAgentTool"] = partial_run_search_agent
+    FUN_MAPPING["Text2SpeechTool"] = partial_text2speech
+    FUN_MAPPING["Text2MusicTool"] = text2music
+    FUN_MAPPING["Speech2TextTool"] = speech2text
+    FUN_MAPPING["SynthesizeAudioTool"] = partial_synthesize_audio
     FUN_MAPPING["GetCurrentTimeTool"] = get_current_time
     FUN_MAPPING["GetAndPlotStockPrices"] = get_and_plot_stock_prices
 
@@ -837,6 +1086,10 @@ async def main():
             GenerateImageTool,
             AnnotateImageTool,
             RunSearchAgentTool,
+            Text2SpeechTool,
+            Text2MusicTool,
+            Speech2TextTool,
+            SynthesizeAudioTool,
             GetCurrentTimeTool,
             GetAndPlotStockPrices,
         ]
@@ -844,12 +1097,23 @@ async def main():
     ########################################################################
     chat_with_model(
         used_model,
-        base64_image,
+        base64_object,
+        media_type,
         streaming=st.session_state.get("key_streaming", True),
         image_width=st.session_state.get("key_width", 300),
+        audio_auto_play=st.session_state.get("audio_auto_play", True),
     )
     streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
     image_width = st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
+    audio_setting_cols = st.sidebar.columns(2)
+    audio_setting_cols[0].checkbox("Audio Auto play", True, key="audio_auto_play")
+    audio_setting_cols[1].selectbox(
+        "Open AI voice types",
+        ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+        index=0,
+        key="voice_types",
+    )
+
     if not os.environ.get("GOOGLE_CSE_ID") or not os.environ.get("GOOGLE_CSE_KEY"):
         st.warning(
             """For Google Search, set GOOGLE_CSE_ID, details: 

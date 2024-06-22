@@ -449,7 +449,7 @@ def text2speech(text: str, voice_type: str = "alloy") -> str:
     return speech_file_path
 
 
-def text2music(prompt: str) -> str:
+def text2music(prompt: str, duration=15) -> str:
     """Convert prompting text to music, return the full filepath to the music."""
 
     def _write_wav(output, file_initials):
@@ -492,13 +492,15 @@ def speech2text(base64_speech_audio: bytes) -> str:
     return res.get("text")
 
 
-def synthesize_audio(speech_text: str, prompt: str, voice_type: str = "alloy") -> str:
+def synthesize_audio(
+    speech_text: str, prompt: str, voice_type: str = "alloy", duration=15
+) -> str:
     """Generate an audio using the provided speech_text and background music audio generated from the prompt.
     Generate an audio from the speech_text and another background music from the prompt, then combine the two audioes
     into a single synthesis.
     """
     text2speech_file_fullpath = text2speech(speech_text, voice_type)
-    text2music_file_fullpath = text2music(prompt)
+    text2music_file_fullpath = text2music(prompt, duration)
     synthesis_filename = f"./tmp/{create_random_filename('.mp3')}"
 
     os.system(
@@ -1062,7 +1064,12 @@ async def main():
         text2speech, voice_type=st.session_state.get("voice_types", "alloy")
     )
     partial_synthesize_audio = partial(
-        synthesize_audio, voice_type=st.session_state.get("voice_types", "alloy")
+        synthesize_audio,
+        voice_type=st.session_state.get("voice_types", "alloy"),
+        duration=st.session_state.get("music_duration", 15),
+    )
+    partial_text2music = partial(
+        text2music, duration=st.session_state.get("music_duration", 15)
     )
     search_agent_tools.extend([partial(load_urls_tool, used_model)])
 
@@ -1070,7 +1077,7 @@ async def main():
     FUN_MAPPING["AnnotateImageTool"] = partial_annotate_image
     FUN_MAPPING["RunSearchAgentTool"] = partial_run_search_agent
     FUN_MAPPING["Text2SpeechTool"] = partial_text2speech
-    FUN_MAPPING["Text2MusicTool"] = text2music
+    FUN_MAPPING["Text2MusicTool"] = partial_text2music
     FUN_MAPPING["Speech2TextTool"] = speech2text
     FUN_MAPPING["SynthesizeAudioTool"] = partial_synthesize_audio
     FUN_MAPPING["GetCurrentTimeTool"] = get_current_time
@@ -1096,19 +1103,21 @@ async def main():
         media_type,
         streaming=st.session_state.get("key_streaming", True),
         image_width=st.session_state.get("key_width", 300),
-        audio_auto_play=st.session_state.get("audio_auto_play", True),
+        audio_auto_play=st.session_state.get("key_audio_auto_play", True),
     )
     st.sidebar.checkbox("Streamming", True, key="key_streaming")
     st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
     audio_setting_cols = st.sidebar.columns(2)
-    audio_setting_cols[0].checkbox("Audio Auto play", True, key="audio_auto_play")
+    audio_setting_cols[0].checkbox("Audio Auto play", True, key="key_audio_auto_play")
     audio_setting_cols[1].selectbox(
         "Open AI voice types",
         ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
         index=0,
         key="voice_types",
     )
-
+    music_duration = st.sidebar.slider(
+        "Music Duration", 10, 30, 15, 1, key="key_music_duration"
+    )
     if not os.environ.get("GOOGLE_CSE_ID") or not os.environ.get("GOOGLE_CSE_KEY"):
         st.warning(
             """For Google Search, set GOOGLE_CSE_ID, details: 

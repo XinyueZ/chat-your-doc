@@ -115,7 +115,7 @@ def doc_uploader() -> Tuple[bytes, str]:
             # pretty_print("doc_uploader", "No image uploaded")
             return None
         if uploaded_doc:
-            tmp_dir = "./chat-your-doc/tmp/"
+            tmp_dir = "./tmp"
             if not os.path.exists(tmp_dir):
                 os.makedirs(tmp_dir)
             temp_file_path = os.path.join(tmp_dir, f"{uploaded_doc.name}")
@@ -468,7 +468,7 @@ def text2music(prompt: str) -> str:
             return None
 
     model = musicgen.MusicGen.get_pretrained("medium", device=DEVICE)
-    model.set_generation_params(duration=30)
+    model.set_generation_params(duration=15)
     musicgen_out = model.generate([prompt], progress=True)
     musicgen_out_filename = f"./tmp/{create_random_name()}"
     _write_wav(musicgen_out, musicgen_out_filename)
@@ -957,11 +957,6 @@ def chat_with_model(
                             {None: tool_messages},
                             {"configurable": {"session_id": None}},
                         )
-                        st.session_state.history.messages = (
-                            st.session_state.history.messages[:-1]
-                            + tool_messages
-                            + st.session_state.history.messages[-1:]
-                        )
                         del tool_messages
 
                     content, additional_kwargs, tool_calls = None, dict(), None
@@ -1033,7 +1028,7 @@ async def main():
     else:
         pretty_print("uploaded", False)
 
-    temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
+    st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
     model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini Pro"], index=0)
     if model_sel == "Gemini Pro":
         used_model = ChatGoogleGenerativeAI(
@@ -1103,8 +1098,8 @@ async def main():
         image_width=st.session_state.get("key_width", 300),
         audio_auto_play=st.session_state.get("audio_auto_play", True),
     )
-    streaming = st.sidebar.checkbox("Streamming", True, key="key_streaming")
-    image_width = st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
+    st.sidebar.checkbox("Streamming", True, key="key_streaming")
+    st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
     audio_setting_cols = st.sidebar.columns(2)
     audio_setting_cols[0].checkbox("Audio Auto play", True, key="audio_auto_play")
     audio_setting_cols[1].selectbox(

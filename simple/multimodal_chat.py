@@ -29,6 +29,7 @@ from langchain.prompts import HumanMessagePromptTemplate, MessagesPlaceholder
 from langchain.schema.output_parser import StrOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import tool
+from langchain_anthropic import ChatAnthropic
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.tools.wikidata.tool import (WikidataAPIWrapper,
@@ -46,6 +47,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import Runnable, RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.tools import Tool
+from langchain_experimental.llms.anthropic_functions import AnthropicFunctions
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from matplotlib import pyplot as plt
@@ -60,8 +62,34 @@ from ultralytics.engine.results import Boxes, Results
 VERBOSE = True
 MAX_TOKEN = 2048
 
-OPENAI_LLM = "gpt-4o"
-GOOGLE_LLM = "gemini-1.5-flash-latest"
+
+LOOK_UP_LLM = {
+    "claude-3-5-sonnet-20240620": {
+        "model": ChatAnthropic(
+            model="claude-3-5-sonnet-20240620",
+            temperature=st.session_state.get("key_temperature", 0.0),
+            max_tokens=MAX_TOKEN,
+        ),
+        "streaming": False,  # Anthropic has content of a list of dict, the fist element is the key "text", value is the text, streaming wont work atm for streamlit.
+    },
+    "gpt-4o": {
+        "model": ChatOpenAI(
+            model="gpt-4o",
+            temperature=st.session_state.get("key_temperature", 0.0),
+            max_tokens=MAX_TOKEN,
+        ),
+        "streaming": True,
+    },
+    "gemini-1.5-flash-latest": {
+        "model": ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash-latest",
+            temperature=st.session_state.get("key_temperature", 0.0),
+            max_tokens=MAX_TOKEN,
+        ),
+        "streaming": True,
+    },
+}
+
 CV_MODEL: str = "yolov8s-world.pt"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -163,13 +191,8 @@ def create_message_chain(
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(
-                content=[
-                    {
-                        "type": "text",
-                        "text": """As a helpful assistant, you should respond to the user's query.
-Avoid giving any information related to the local file system or sandbox.""",
-                    }
-                ]
+                content="""As a helpful assistant, you should respond to the user's query.
+Avoid giving any information related to the local file system or sandbox."""
             ),
             MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template(
@@ -919,6 +942,7 @@ def chat_with_model(
                     )
         else:
             with st.chat_message(message["role"]):
+                # pretty_print("message[\"content\"]", message["content"])
                 st.markdown(message["content"])
 
     if prompt := st.chat_input("Write...", key="chat_input"):
@@ -964,6 +988,11 @@ def chat_with_model(
                     content, additional_kwargs, tool_calls = None, dict(), None
                     if not streaming:
                         content = res.content
+                        content = (
+                            content
+                            if not isinstance(content, list)
+                            else content[0]["text"]
+                        )  # Anthropic has content of a list of dict, the fist element is the key "text", value is the text.
                         st.markdown(content)
                     else:
                         content = st.write_stream(res)
@@ -1031,27 +1060,14 @@ async def main():
         pretty_print("uploaded", False)
 
     st.sidebar.slider("Temperature", 0.0, 1.0, 0.0, key="key_temperature")
-    model_sel = st.sidebar.selectbox("Model", ["GPT-4o", "Gemini Pro"], index=0)
-    if model_sel == "Gemini Pro":
-        used_model = ChatGoogleGenerativeAI(
-            model=GOOGLE_LLM,
-            temperature=st.session_state.key_temperature,
-            max_tokens=MAX_TOKEN,
-        )
-    else:
-        used_model = ChatOpenAI(
-            model=OPENAI_LLM,
-            temperature=st.session_state.key_temperature,
-            max_tokens=MAX_TOKEN,
-        )
+    model_sel = st.sidebar.selectbox("Model", LOOK_UP_LLM.keys(), index=0)
+    used_model = LOOK_UP_LLM[model_sel]["model"]
+    streaming = LOOK_UP_LLM[model_sel]["streaming"]
+
     ######################## config tool-bindings ########################
     partial_generate_image = partial(
         generate_image,
-        model=ChatOpenAI(
-            model=OPENAI_LLM,
-            temperature=st.session_state.key_temperature,
-            max_tokens=MAX_TOKEN,
-        ),
+        model=LOOK_UP_LLM["gpt-4o"]["model"],
     )
     partial_annotate_image = partial(
         annotate_image,
@@ -1101,11 +1117,12 @@ async def main():
         used_model,
         base64_object,
         media_type,
-        streaming=st.session_state.get("key_streaming", True),
+        streaming=(st.session_state.get("key_streaming", True) if streaming else False),
         image_width=st.session_state.get("key_width", 300),
         audio_auto_play=st.session_state.get("key_audio_auto_play", True),
     )
-    st.sidebar.checkbox("Streamming", True, key="key_streaming")
+    if streaming:
+        st.sidebar.checkbox("Streamming", True, key="key_streaming")
     st.sidebar.slider("Image Width", 100, 1000, 500, 100, key="key_width")
     audio_setting_cols = st.sidebar.columns(2)
     audio_setting_cols[0].checkbox("Audio Auto play", True, key="key_audio_auto_play")
@@ -1115,9 +1132,7 @@ async def main():
         index=0,
         key="voice_types",
     )
-    music_duration = st.sidebar.slider(
-        "Music Duration", 10, 30, 10, 1, key="key_music_duration"
-    )
+    st.sidebar.slider("Music Duration", 10, 30, 10, 1, key="key_music_duration")
     if not os.environ.get("GOOGLE_CSE_ID") or not os.environ.get("GOOGLE_CSE_KEY"):
         st.warning(
             """For Google Search, set GOOGLE_CSE_ID, details: 

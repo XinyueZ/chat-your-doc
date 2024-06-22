@@ -569,7 +569,7 @@ class GetCurrentTimeTool(BaseModel):
     )
 
 
-class GetAndPlotStockPrices(BaseModel):
+class GetAndPlotStockPricesTool(BaseModel):
     """Get and plot the stock prices for the given stock symbols between the start and end dates."""
 
     stock_symbols: str = Field(
@@ -779,13 +779,12 @@ def handle_get_stock_prices(
 
         additional_kwargs["image_path"], additional_kwargs["dataframe"] = (
             image_path,
-            prices_df,
+            prices_df.to_string(),
         )
-
         return ToolMessage(
             content=f"""Complete getting stock prices successfully, tool has finished, stop further investigation. The stock prices requested:
 dataframe:
-{prices_df}""",
+{prices_df.to_string()}""",
             tool_call_id=tool_id,
             additional_kwargs=additional_kwargs,
         )
@@ -898,7 +897,7 @@ def tool_call_proc(
             return handle_speech2text(tool_name, tool_id, base64_object)
         case "GetCurrentTimeTool":
             return handle_get_current_time(tool_name, tool_id)
-        case "GetAndPlotStockPrices":
+        case "GetAndPlotStockPricesTool":
             now = datetime.now()
             tool_stock_symbols = tool_call["args"]["stock_symbols"]
             tool_start_date = tool_call["args"].get("start_date", now)
@@ -1097,7 +1096,7 @@ async def main():
     FUN_MAPPING["Speech2TextTool"] = speech2text
     FUN_MAPPING["SynthesizeAudioTool"] = partial_synthesize_audio
     FUN_MAPPING["GetCurrentTimeTool"] = get_current_time
-    FUN_MAPPING["GetAndPlotStockPrices"] = get_and_plot_stock_prices
+    FUN_MAPPING["GetAndPlotStockPricesTool"] = get_and_plot_stock_prices
 
     used_model = used_model.bind_tools(
         [
@@ -1109,7 +1108,7 @@ async def main():
             Speech2TextTool,
             SynthesizeAudioTool,
             GetCurrentTimeTool,
-            GetAndPlotStockPrices,
+            GetAndPlotStockPricesTool,
         ]
     )
     ########################################################################

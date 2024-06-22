@@ -1116,7 +1116,7 @@ async def main():
         key="voice_types",
     )
     music_duration = st.sidebar.slider(
-        "Music Duration", 10, 30, 15, 1, key="key_music_duration"
+        "Music Duration", 10, 30, 10, 1, key="key_music_duration"
     )
     if not os.environ.get("GOOGLE_CSE_ID") or not os.environ.get("GOOGLE_CSE_KEY"):
         st.warning(

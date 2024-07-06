@@ -30,6 +30,11 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 
 Also, take a look at a use-case known as [Knowledge Center](https://github.com/XinyueZ/knowledge-center) that leverages different RAG or Chunking techniques in this repository.
 
+#### Typical multimodal Chatbot sample
+
+- Video: https://drive.google.com/file/d/1AMAi561gbAuHyT5BQFt7wlg5Xockx-Ni/view?usp=drive_link
+- Source: https://github.com/XinyueZ/chat-your-doc/blob/master/simple/multimodal_chat.py
+
 ----
 
 # Setup

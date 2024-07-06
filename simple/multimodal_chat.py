@@ -32,8 +32,7 @@ from langchain.tools import tool
 from langchain_anthropic import ChatAnthropic
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_community.tools.wikidata.tool import (WikidataAPIWrapper,
-                                                     WikidataQueryRun)
+from langchain_community.tools.wikidata.tool import WikidataAPIWrapper, WikidataQueryRun
 from langchain_community.tools.wikipedia.tool import WikipediaQueryRun
 from langchain_community.utilities import GoogleSearchAPIWrapper
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
@@ -640,7 +639,7 @@ def handle_generate_image(
         additional_kwargs = {"image_url": image_url} if image_url else {}
         return ToolMessage(
             content=(
-                f"Generated image successfully, tool has finished: ![]({image_url})"
+                f"Generated image successfully, tool has finished."#, tell the users to use the following link to view the image: ![]({image_url})"
                 if image_url
                 else "Tool called, nothing was generated"
             ),
@@ -933,6 +932,11 @@ def chat_with_model(
                     st.image(
                         message["additional_kwargs"]["image_path"], width=image_width
                     )
+            if message["additional_kwargs"].get("image_url"):
+                with st.chat_message("assistant"):
+                    st.image(
+                        message["additional_kwargs"]["image_url"], width=image_width
+                    )
             if message["additional_kwargs"].get("audio_path"):
                 with st.chat_message("assistant"):
                     st.audio(
@@ -1008,6 +1012,11 @@ def chat_with_model(
                         if additional_kwargs.get("image_path"):
                             st.image(
                                 additional_kwargs.get("image_path"),
+                                width=image_width,
+                            )
+                        if additional_kwargs.get("image_url"):
+                            st.image(
+                                additional_kwargs.get("image_url"),
                                 width=image_width,
                             )
                         if additional_kwargs.get("audio_path"):

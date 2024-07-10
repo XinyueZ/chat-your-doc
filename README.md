@@ -34,6 +34,7 @@ Also, take a look at a use-case known as [Knowledge Center](https://github.com/X
 
 - Video: https://drive.google.com/file/d/1AMAi561gbAuHyT5BQFt7wlg5Xockx-Ni/view?usp=drive_link
 - Source: https://github.com/XinyueZ/chat-your-doc/blob/master/simple/multimodal_chat.py
+- Start: `streamlit run simple/multimodal_chat.py --server.port 8000 --server.enableCORS false`
 
 ----
 

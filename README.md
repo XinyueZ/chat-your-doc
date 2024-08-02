@@ -161,6 +161,10 @@ Chroma, FAISS
 
 > A follow-up read: Use Cohere’s documents and a special field in additional_kwargsfeature to enhance the organization of information in multi-user conversation.
 
+[(Llama-Index Workflow)Translation Agent via Reflection Workflow](https://teetracker.medium.com/llamaindex-workflow-translation-agent-via-reflection-workflow-7ed51eeb5257)
+
+> Implemention of [Translation Agent: Agentic translation using reflection workflow](https://github.com/andrewyng/translation-agent/tree/main) with Llama-Index [workflow framework](https://www.llamaindex.ai/blog/introducing-workflows-beta-a-new-way-to-create-complex-ai-applications-with-llamaindex).
+
 ## Simple
 
 | App | Description | Launch | Demo |
@@ -177,6 +181,7 @@ Chroma, FAISS
 | [prio_reasoning_context.py](simple/prio_reasoning_context.py)   | A simple app that based on RAG with Prio-Reasoning pattern in  [LlamaIndex](https://www.llamaindex.ai/) or LangChain.| `streamlit run simple/prio_reasoning_context.py --server.port 8008 --server.enableCORS false` | [read](https://teetracker.medium.com/https://teetracker.medium.com/prio-reasoning-919fd6e90d86) ![](assets/screens/prio_reasoning_context.gif) ![](assets/guide/prio_reasoning_context_langchain.webp) ![](assets/guide/prio_reasoning_context_llamaindex.webp) | 
 | [ollama_gemma.py](simple/ollama_gemma.py)   | A [Ollama](https://ollama.com/library/gemma) for Gemma integration with the langchain.|  | [read](https://teetracker.medium.com/quick-tour-ollama-gemma-langchain-ea28e5314256) ![](assets/screens/ollama_gemma.gif)  | 
 | [nvidia_vs_groq.py](simple/nvidia_vs_groq.py)   | Compare [Nvidia](Nvidiahttps://python.langchain.com/docs/integrations/text_embedding/nvidia_ai_endpoints) API and [Groq](https://python.langchain.com/docs/integrations/chat/groq), by using `llama2` and `mixtral_8x7b`| `streamlit run simple/nvidia_vs_groq.py --server.port 8009 --server.enableCORS false`   | [read](https://teetracker.medium.com/langchain-history-driven-rag-enhanced-by-llm-chain-routing-9a9d689098ae) ![](assets/guide/nvidia_vs_groq.webp)  ![](assets/screens/nvidia_vs_groq.gif) | 
+| [llamaindex_workflow_reflection_flow.py](simple/llamaindex_workflow_reflection_flow.py)   | Implemention of [Translation Agent: Agentic translation using reflection workflow](https://github.com/andrewyng/translation-agent/tree/main) with Llama-Index [workflow framework](https://www.llamaindex.ai/blog/introducing-workflows-beta-a-new-way-to-create-complex-ai-applications-with-llamaindex) | `streamlit run simple/llamaindex_workflow_reflection_flow.py --server.port 8009 --server.enableCORS false`   | [read](https://teetracker.medium.com/llamaindex-workflow-translation-agent-via-reflection-workflow-7ed51eeb5257)  ![](assets/screens/llamaindex-workflow-reflection-workflow.gif) | 
 
 ## Intermediate
 

@@ -84,6 +84,7 @@ class GroqModule(ModelModule):
     )
 
 
+# Some other embedding models:
 # OpenAIEmbeddings(model="text-embedding-3-large")
 # MistralAIEmbeddings(model="mistral-embed")
 # OllamaEmbeddings(model="nomic-embed-text", show_progress=False)
@@ -100,7 +101,6 @@ chunking_transformer = SentenceTransformersTokenTextSplitter(
     chunk_overlap=DEFAULT_CITATION_CHUNK_OVERLAP,
     chunk_size=DEFAULT_CITATION_CHUNK_SIZE,
 )
-# SemanticChunker(current_module.embed)
 
 
 # %%

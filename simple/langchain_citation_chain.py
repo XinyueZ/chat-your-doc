@@ -1,3 +1,15 @@
+# Description: Retrieval Augmented Generation with Citations
+# Inspired by
+# https://zilliz.com/blog/retrieval-augmented-generation-with-citations
+# with Llama-Index version:
+# 1. https://github.com/run-llama/llama_index/blob/main/docs/docs/examples/query_engine/citation_query_engine.ipynb
+# 2. https://www.linkedin.com/posts/llamaindex_check-out-our-new-video-from-ravi-theja-desetty-activity-7229883929594372096-IhhC
+#
+# Different:
+# 1. Use langchain to build the citation chain
+# 2. Use two transformers to split the source document and citation chunking.
+# 3. Reranking is driven by the GPT model.
+
 # %%
 import os
 import sys
@@ -27,7 +39,7 @@ from langchain_text_splitters.sentence_transformers import (
 )
 from loguru import logger
 from rich.pretty import pprint as pp
-
+from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
 from langchain_community.document_compressors.rankllm_rerank import RankLLMRerank
 
@@ -39,14 +51,17 @@ from langchain_community.document_compressors.rankllm_rerank import RankLLMReran
 MAX_TOKEN = 2048
 TEMPERATURE = 0.0
 RETRIEVER_K = 10
+RERANKING_N = 5
 DEFAULT_CITATION_CHUNK_SIZE = 512
 DEFAULT_CITATION_CHUNK_OVERLAP = 32
+
 # %%
 
 
 class ModelModule:
     embed: Embeddings
     llm: BaseChatModel
+    compressor: BaseDocumentCompressor
 
 
 class GoogleModule(ModelModule):
@@ -54,6 +69,9 @@ class GoogleModule(ModelModule):
         model="gemini-1.5-flash-latest", temperature=TEMPERATURE, max_tokens=MAX_TOKEN
     )
     embed: Embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+    compressor: BaseDocumentCompressor = RankLLMRerank(
+        top_n=RERANKING_N, model="gpt", gpt_model="gpt-4o-mini"
+    )
 
 
 class GroqModule(ModelModule):
@@ -61,6 +79,9 @@ class GroqModule(ModelModule):
         model="llama-3.1-70b-versatile", temperature=TEMPERATURE, max_tokens=MAX_TOKEN
     )
     embed: Embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    compressor: BaseDocumentCompressor = RankLLMRerank(
+        top_n=RERANKING_N, model="gpt", gpt_model="gpt-4o-mini"
+    )
 
 
 # OpenAIEmbeddings(model="text-embedding-3-large")
@@ -129,6 +150,7 @@ class CitationChain:
                         "which occurs in the evening [1].\n"
                         "[1] means from Source 1, [2] means from Source 2."
                         "You must always display the citation source numbers correctly between the reference location and the source location. "
+                        "You don't need to show the list of sources in the answer. "
                         "Now it's your turn. Below are several numbered sources of information:"
                         "\n------\n"
                         "Context: {context}"
@@ -177,7 +199,7 @@ class CitationChain:
                 )
             ]
         )
-        self.compressor = RankLLMRerank(top_n=3, model="gpt", gpt_model="gpt-3.5-turbo")
+        self.compressor = current_module.compressor
 
     def load_docs(self, urls: Sequence[str], loader_exe_fn) -> Sequence[Document]:
         """Load the docs from the given Urls."""

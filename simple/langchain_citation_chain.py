@@ -28,15 +28,19 @@ from langchain_text_splitters.sentence_transformers import (
 from loguru import logger
 from rich.pretty import pprint as pp
 
+from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain_community.document_compressors.rankllm_rerank import RankLLMRerank
+
+
 # monitor of langsmith
 # os.environ["LANGCHAIN_PROJECT"] = "langchain_citation_chain"
 
 # %%
 MAX_TOKEN = 2048
 TEMPERATURE = 0.0
-RETRIEVER_K = 20
-DEFAULT_CITATION_CHUNK_SIZE = 1024
-DEFAULT_CITATION_CHUNK_OVERLAP = 0
+RETRIEVER_K = 10
+DEFAULT_CITATION_CHUNK_SIZE = 512
+DEFAULT_CITATION_CHUNK_OVERLAP = 32
 # %%
 
 
@@ -173,6 +177,7 @@ class CitationChain:
                 )
             ]
         )
+        self.compressor = RankLLMRerank(top_n=3, model="gpt", gpt_model="gpt-3.5-turbo")
 
     def load_docs(self, urls: Sequence[str], loader_exe_fn) -> Sequence[Document]:
         """Load the docs from the given Urls."""
@@ -237,7 +242,11 @@ class CitationChain:
         # use a vector database for chunks and a regular database for parent documents;
         # here, just ignore this and only save chunks (vectors).
         db = FAISS.from_documents(chunks, self.current_module.embed)
-        context = db.as_retriever(search_kwargs={"k": RETRIEVER_K}).invoke(question)
+        base_retriever = db.as_retriever(search_kwargs={"k": RETRIEVER_K})
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=self.compressor, base_retriever=base_retriever
+        )
+        context = compression_retriever.invoke(question)
         chain = (
             {
                 "question": lambda x: x["question"],

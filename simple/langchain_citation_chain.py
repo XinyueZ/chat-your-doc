@@ -1,4 +1,4 @@
-# Description: Retrieval Augmented Generation with Citations
+# Description: (LangChain) Retrieval Augmented Generation with Citations
 # Inspired by
 # https://zilliz.com/blog/retrieval-augmented-generation-with-citations
 # with Llama-Index version:

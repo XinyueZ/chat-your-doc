@@ -12,3 +12,5 @@ simple/wine-price-app/packages/csv-agent/wine_data/*.pkl
 *.pt
 assets/images/receipt
 token.json
+.chainlit
+chainlit.md

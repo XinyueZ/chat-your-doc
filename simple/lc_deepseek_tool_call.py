@@ -5,8 +5,7 @@ from langchain.prompts.chat import (ChatPromptTemplate,
 from langchain.tools import tool
 from langchain_experimental.llms.ollama_functions import \
     OllamaFunctions as ToolSupportChatOllama
-from langchain_ollama import ChatOllama
-# from langchain_ollama import ChatOllama
+from langchain_ollama import ChatOllama 
 from pydantic import BaseModel, Field
 from rich.pretty import pprint as pp
 

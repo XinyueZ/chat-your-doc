@@ -28,7 +28,7 @@ class NamingGeneratorFromInt(BaseModel):
     return_direct=True,
     args_schema=NamingGeneratorFromInt,
 )
-def naming_generator_from_int(x: int) -> float:
+def naming_generator_from_int(x: int) -> str:
     """Generate a artificial name from an integer."""
     return f"Mustermann {x}"
 

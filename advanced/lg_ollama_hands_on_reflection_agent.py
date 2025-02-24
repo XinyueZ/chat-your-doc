@@ -328,7 +328,7 @@ Remember to maintain a helpful and friendly tone throughout your response."""
 
 
 def get_reflection_content(reflection: str) -> str:
-    logger.info(f"Before struct-output reflection: {reflection}")
+    logger.info(reflection)
     if "Has Reflection" not in reflection:
         return ""
     structured_output: dict[str, Any] = reflection_structured_output_parser.parse(

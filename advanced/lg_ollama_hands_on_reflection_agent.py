@@ -333,7 +333,10 @@ def get_reflection_content(reflection: str) -> str:
         reflection
     )
     # logger.debug(f"Struct-output reflection: {structured_output}")
-    if structured_output["Has Reflection"] == "yes":
+    if (
+        "Has Reflection" in structured_output
+        and structured_output["Has Reflection"] == "yes"
+    ):
         reflection_content = json.dumps(structured_output)
         return reflection_content
     return ""

@@ -328,15 +328,14 @@ Remember to maintain a helpful and friendly tone throughout your response."""
 
 
 def get_reflection_content(reflection: str) -> str:
-    # logger.debug(f"Before struct-output reflection: {reflection}")
+    logger.info(f"Before struct-output reflection: {reflection}")
+    if "Has Reflection" not in reflection:
+        return ""
     structured_output: dict[str, Any] = reflection_structured_output_parser.parse(
         reflection
     )
     # logger.debug(f"Struct-output reflection: {structured_output}")
-    if (
-        "Has Reflection" in structured_output
-        and structured_output["Has Reflection"] == "yes"
-    ):
+    if structured_output["Has Reflection"] == "yes":
         reflection_content = json.dumps(structured_output)
         return reflection_content
     return ""

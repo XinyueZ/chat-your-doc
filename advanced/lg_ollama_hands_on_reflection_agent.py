@@ -47,7 +47,7 @@ os.environ["LLM_TIMEOUT"] = os.getenv("LLM_TIMEOUT", 120)
 # %%
 VERBOSE = int(os.getenv("VERBOSE", 1)) == 1
 MAX_ITERATIONS = 3
-SEED = 42
+SEED = os.getenv("SEED", 42)
 
 # %% LLM
 qa_model = ChatOllama(
@@ -329,16 +329,15 @@ Remember to maintain a helpful and friendly tone throughout your response."""
 
 def get_reflection_content(reflection: str) -> str:
     logger.info(reflection)
-    if "Has Reflection" not in reflection:
+    if (
+        "Has Reflection" not in reflection
+        or """
+"Has Reflection": "no"
+""".strip()
+        in reflection
+    ):
         return ""
-    structured_output: dict[str, Any] = reflection_structured_output_parser.parse(
-        reflection
-    )
-    # logger.debug(f"Struct-output reflection: {structured_output}")
-    if structured_output["Has Reflection"] == "yes":
-        reflection_content = json.dumps(structured_output)
-        return reflection_content
-    return ""
+    return reflection
 
 
 def get_improved_response(message_content: str) -> str:

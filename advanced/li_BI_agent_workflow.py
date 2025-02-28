@@ -364,7 +364,9 @@ agent_workflow = AgentWorkflow(
     verbose=VERBOSE,
     state_prompt="📣 Current state: {state}. User message: {msg}",
 )
-draw_all_possible_flows(agent_workflow, filename="workflow/li_BI_agent_workflow_all.html") 
+draw_all_possible_flows(
+    agent_workflow, filename="workflow/li_BI_agent_workflow_all.html"
+)
 
 
 # %%
@@ -378,32 +380,30 @@ async def main():
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
         logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
         llama_index.core.set_global_handler("simple")
-    try:
-        await agent_workflow.run(
-            user_msg="""I want to buy a MacBook Pro Max (M4), here is the link to the product: https://www.apple.com/de/shop/buy-mac/macbook-pro/14-zoll-m4-max
-    Can you use the price trends of the MacBook Pro Max (M4) over the past three years and the expected price trends for this year to provide a suitable time for me to purchase this model in 2025? 
 
-    IMPORTANT: 
-    - Use the Internet(mandatory), Wikipedia or WikiData and so on as the most reliable source.
-    - Only MacBook Pro Max (M4) is our goal, don't consider other types or models.
-    - Result in Markdown format, must be clear and concise.
-    - Currency in Euro (€), you can use the actual rate from the internet.
-    - Location in Germany, you can scale to worldwide.
-    - Always answer in English.
+    await agent_workflow.run(
+        user_msg="""I want to buy a MacBook Pro Max (M4), here is the link to the product: https://www.apple.com/de/shop/buy-mac/macbook-pro/14-zoll-m4-max
+Can you use the price trends of the MacBook Pro Max (M4) over the past three years and the expected price trends for this year to provide a suitable time for me to purchase this model in 2025? 
 
-    Give me the answer as follows:
-    0. Explain our goals, which is also the main purpose of this report.
-    1. Purchase timing, seasonal adjustments
-    2. Expected price
-    3. Minimum configuration for the MacBook Pro Max (M4) might be
-    4. Conclusion and Recommendations: Summarize key observations and provide actionable suggestions.
+IMPORTANT: 
+- Use the Internet(mandatory), Wikipedia or WikiData and so on as the most reliable source.
+- Only MacBook Pro Max (M4) is our goal, don't consider other types or models.
+- Result in Markdown format, must be clear and concise.
+- Currency in Euro (€), you can use the actual rate from the internet.
+- Location in Germany, you can scale to worldwide.
+- Always answer in English.
 
-    Begin to analyze and generate an answer:
-    """
-        )
-        logger.success("✨🎉 Done.")
-    except Exception as e:
-        logger.error(f"❌ Error: {str(e)}")
+Give me the answer as follows:
+0. Explain our goals, which is also the main purpose of this report.
+1. Purchase timing, seasonal adjustments
+2. Expected price
+3. Minimum configuration for the MacBook Pro Max (M4) might be
+4. Conclusion and Recommendations: Summarize key observations and provide actionable suggestions.
+
+Begin to analyze and generate an answer:
+"""
+    )
+    logger.success("✨🎉 Done.")
 
 
 # %%

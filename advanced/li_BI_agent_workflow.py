@@ -17,6 +17,8 @@ from llama_index.core.workflow import Context, StopEvent
 from llama_index.llms.gemini import Gemini
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.vertex import Vertex
+from llama_index.utils.workflow import (draw_all_possible_flows,
+                                        draw_most_recent_execution)
 from loguru import logger
 from pydantic import BaseModel, Field
 from rich.console import Console
@@ -123,7 +125,7 @@ async def post_critic(
     ctx: Context,
     reflection: str = Field(description="The reflection content from the CriticAgent."),
 ) -> Any:
-    """Post action after the critic produces the reflection.""" 
+    """Post action after the critic produces the reflection."""
     logger.debug(f"🧐 Critic step: {await ctx.get('state')}")
     current_state = await ctx.get("state")
     current_state["reflection"] = reflection
@@ -362,6 +364,7 @@ agent_workflow = AgentWorkflow(
     verbose=VERBOSE,
     state_prompt="📣 Current state: {state}. User message: {msg}",
 )
+draw_all_possible_flows(agent_workflow, filename="workflow/li_BI_agent_workflow_all.html") 
 
 
 # %%

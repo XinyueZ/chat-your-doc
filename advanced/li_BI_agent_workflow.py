@@ -338,8 +338,7 @@ TASK 3: REPORT SUBMISSION
 - Ensure your report is complete and polished before submission
 - The report should represent a final product ready for presentation
 
-Remember: Your report should be factually accurate, well-organized, and based exclusively on the information provided in the regression notes.
-If the information you receive is empty or extremely short, please hand it off to CriticAgent and explain the reason."""
+Remember: Your report should be factually accurate, well-organized, and based exclusively on the information provided in the regression notes."""
     ),
     tools=[
         FunctionTool.from_defaults(

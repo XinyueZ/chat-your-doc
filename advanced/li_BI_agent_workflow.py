@@ -437,10 +437,7 @@ Present findings in a structured Markdown report with the following sections:
 ## ANALYSIS CONSTRAINTS
 - Prioritize accuracy and reliability of information over comprehensiveness
 - Acknowledge limitations in predictive capabilities where appropriate
-- Maintain objectivity in all assessments and recommendations
-
-IMPORTANT: The title of the report should be fixed: "MacBook Pro Max (M4) Purchase Timing Analysis: Germany - 2025"
-""",
+- Maintain objectivity in all assessments and recommendations""",
     )
     logger.success("✨🎉 Done.")
 

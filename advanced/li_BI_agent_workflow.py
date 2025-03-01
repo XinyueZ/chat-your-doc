@@ -10,15 +10,10 @@ import requests
 from dotenv import load_dotenv
 from langchain_community.tools import BraveSearch, DuckDuckGoSearchRun
 from langchain_community.utilities import GoogleSerperAPIWrapper
-from llama_index.core.agent.workflow import (AgentWorkflow, FunctionAgent,
-                                             ReActAgent)
+from llama_index.core.agent.workflow import AgentWorkflow, FunctionAgent
 from llama_index.core.tools import FunctionTool
-from llama_index.core.workflow import Context, StopEvent
+from llama_index.core.workflow import Context
 from llama_index.llms.gemini import Gemini
-from llama_index.llms.ollama import Ollama
-from llama_index.llms.vertex import Vertex
-from llama_index.utils.workflow import (draw_all_possible_flows,
-                                        draw_most_recent_execution)
 from loguru import logger
 from pydantic import BaseModel, Field
 from rich.console import Console
@@ -44,24 +39,30 @@ SEED = os.getenv("SEED", 42)
 
 # %%
 regress_model = Gemini(
-    model="models/gemini-2.0-flash",
+    model="models/gemini-1.5-flash",
     max_tokens=8000,
-    location=os.getenv("VERTEX_LOCATION"),
-    temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
+    location=os.getenv("GOOGLE_CLOUD_REGION"),
+    top_p=float(os.getenv("LLM_TOP_P", 1.0)),
+    top_k=int(os.getenv("LLM_TOP_K", 30)),
+    temperature=0.1,
 )
 
 critic_model = Gemini(
     model="models/gemini-2.0-flash",
     max_tokens=8000,
-    location=os.getenv("VERTEX_LOCATION"),
+    location=os.getenv("GOOGLE_CLOUD_REGION"),
+    top_p=float(os.getenv("LLM_TOP_P", 1.0)),
+    top_k=int(os.getenv("LLM_TOP_K", 30)),
     temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
 )
 
 report_model = Gemini(
-    model="models/gemini-2.0-flash",
+    model="models/gemini-1.5-flash",
     max_tokens=8000,
-    location=os.getenv("VERTEX_LOCATION"),
-    temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
+    location=os.getenv("GOOGLE_CLOUD_REGION"),
+    top_p=float(os.getenv("LLM_TOP_P", 1.0)),
+    top_k=int(os.getenv("LLM_TOP_K", 30)),
+    temperature=0.0,
 )
 
 
@@ -132,9 +133,9 @@ async def post_critic(
     current_state["critic_steps"] = int(current_state.get("critic_steps", 0)) + 1
     await ctx.set("state", current_state)
     logger.debug(f"😉 Critic step updated: {await ctx.get('state')}")
-    if int(current_state.get("critic_steps", 0)) == 3:
+    if int(current_state.get("critic_steps", 0)) >= 3:
         logger.debug(f"💥 Critic max-iter reached.")
-        raise StopEvent()
+        raise Exception("Stop flow")
     logger.debug(f"👌 Critic done: {int(current_state.get('critic_steps', 0))}")
     return reflection
 
@@ -201,7 +202,7 @@ List of the reworking content:
 
 The CriticAgent suggested originally: [Include the CriticAgent's original feedback here]
 
-- Once the 'post_reworking'  was called, you can ignore calling 'post_regression'.
+- Once the 'post_reworking'  was called, you can ignore calling 'post_regression'. 
 - After completing your revisions, you MUST hand off control to the CriticAgent again for final review."""
     ),
     tools=[
@@ -364,9 +365,6 @@ agent_workflow = AgentWorkflow(
     verbose=VERBOSE,
     state_prompt="📣 Current state: {state}. User message: {msg}",
 )
-draw_all_possible_flows(
-    agent_workflow, filename="workflow/li_BI_agent_workflow_all.html"
-)
 
 
 # %%
@@ -382,26 +380,64 @@ async def main():
         llama_index.core.set_global_handler("simple")
 
     await agent_workflow.run(
-        user_msg="""I want to buy a MacBook Pro Max (M4), here is the link to the product: https://www.apple.com/de/shop/buy-mac/macbook-pro/14-zoll-m4-max
-Can you use the price trends of the MacBook Pro Max (M4) over the past three years and the expected price trends for this year to provide a suitable time for me to purchase this model in 2025? 
+        user_msg="""# MacBook Pro Max (M4) Purchase Timing Analysis Request
 
-IMPORTANT: 
-- Use the Internet(mandatory), Wikipedia or WikiData and so on as the most reliable source.
-- Only MacBook Pro Max (M4) is our goal, don't consider other types or models.
-- Result in Markdown format, must be clear and concise.
-- Currency in Euro (€), you can use the actual rate from the internet.
-- Location in Germany, you can scale to worldwide.
-- Always answer in English.
+## OBJECTIVE
+Conduct a comprehensive analysis of the optimal purchase timing for a MacBook Pro with M4 Max chip in Germany, based on historical price trends and market forecasts for 2025.
 
-Give me the answer as follows:
-0. Explain our goals, which is also the main purpose of this report.
-1. Purchase timing, seasonal adjustments
-2. Expected price
-3. Minimum configuration for the MacBook Pro Max (M4) might be
-4. Conclusion and Recommendations: Summarize key observations and provide actionable suggestions.
+## PRODUCT SPECIFICATIONS
+- Product: MacBook Pro with M4 Max chip
+- Reference URL: https://www.apple.com/de/shop/buy-mac/macbook-pro/14-zoll-m4-max
+- Target market: Germany
+- Currency: Euro (€)
 
-Begin to analyze and generate an answer:
-"""
+## ANALYSIS REQUIREMENTS
+1. Utilize authoritative data sources including:
+   - Official Apple pricing history
+   - Reputable market analysis platforms
+   - Historical retail pricing data from German electronics retailers
+   - Economic forecasts relevant to consumer electronics in the European market
+
+2. Focus exclusively on the MacBook Pro with M4 Max configuration
+   - Do not include analysis of other models or configurations
+   - Consider only the specific model referenced in the URL
+
+3. Provide data-driven insights on:
+   - Historical price fluctuations of premium MacBook models in the German market
+   - Seasonal pricing patterns observed over the past three years
+   - Projected price trends for 2025 based on economic indicators and Apple's product lifecycle
+   - Optimal purchase windows that balance price advantage with technology relevance
+
+## DELIVERABLE FORMAT
+Present findings in a structured Markdown report with the following sections:
+
+1. **Executive Summary**: Concise overview of analysis objectives and key findings
+2. **Purchase Timing Analysis**: 
+   - Seasonal pricing patterns with specific months identified for optimal purchasing
+   - Impact of Apple product release cycles on pricing
+   - Correlation between major retail events and price reductions
+3. **Price Forecast**: 
+   - Projected price points throughout 2025
+   - Confidence intervals for price predictions
+   - Identification of potential price floors
+4. **Configuration Recommendations**: 
+   - Minimum viable specifications for the M4 Max model
+   - Cost-benefit analysis of various configuration options
+5. **Strategic Recommendations**: 
+   - Actionable purchasing strategy with specific timing windows
+   - Risk mitigation approaches for potential price volatility
+   - Alternative purchasing channels if applicable
+
+## ADDITIONAL PARAMETERS
+- All monetary values must be presented in Euro (€)
+- All analysis must be specific to the German market, with global context where relevant
+- All content must be presented in English
+- Citations must be provided for all data sources
+
+## ANALYSIS CONSTRAINTS
+- Prioritize accuracy and reliability of information over comprehensiveness
+- Acknowledge limitations in predictive capabilities where appropriate
+- Maintain objectivity in all assessments and recommendations""",
     )
     logger.success("✨🎉 Done.")
 

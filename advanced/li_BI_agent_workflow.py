@@ -44,7 +44,7 @@ regress_model = Gemini(
     location=os.getenv("GOOGLE_CLOUD_REGION"),
     top_p=float(os.getenv("LLM_TOP_P", 1.0)),
     top_k=int(os.getenv("LLM_TOP_K", 30)),
-    temperature=0.1,
+    temperature=0.,
 )
 
 critic_model = Gemini(
@@ -83,25 +83,28 @@ def web_search(
     try:
         google_search = GoogleSerperAPIWrapper(k=10).run(query)
         result.append(google_search)
+        pp(google_search)
     except:
         pass
 
-    try:
-        brave_search_json = BraveSearch.from_api_key(
-            api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
-            search_kwargs={"count": 10},
-        ).run(query)
-        brave_search = json.dumps(brave_search_json)
-        result.append(brave_search)
-    except:
-        pass
+    # try:
+    #     brave_search_json = BraveSearch.from_api_key(
+    #         api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
+    #         search_kwargs={"count": 10},
+    #     ).run(query)
+    #     brave_search = json.dumps(brave_search_json)
+    #     result.append(brave_search)
+    #     pp(brave_search)
+    # except:
+    #     pass
 
-    try:
-        duckduckgo_search = DuckDuckGoSearchRun().run(query)
-        logger.debug(f"🔍 DuckDuckGo search result: \n{duckduckgo_search}")
-        result.append(duckduckgo_search)
-    except:
-        pass
+    # try:
+    #     duckduckgo_search = DuckDuckGoSearchRun().run(query)
+    #     logger.debug(f"🔍 DuckDuckGo search result: \n{duckduckgo_search}")
+    #     result.append(duckduckgo_search)
+    #     pp(duckduckgo_search)
+    # except:
+    #     pass
 
     return "\n".join(result)
 
@@ -184,14 +187,17 @@ TASK 1: RESEARCH AND DOCUMENTATION
 - Collect and organize detailed notes focusing on developments within the last 1-2 years
 - Use the 'post_regression' tool to record your research findings
 - Ensure your notes are significant, meaningful, and informative before proceeding
+- You must use tool 'open_url' to retrieve the information from the web if any web links were provided by results of web-search.
 
-TASK 2: HANDOFF TO CriticAgent
-- Once you have gathered sufficient information, hand off control to the CriticAgent
-- The CriticAgent will review your work and write a report based on your research
-- Only transfer control after you have compiled comprehensive notes on the topic
+TASK 2: HANDOFF TO CriticAgent [CRITICAL]
+- YOU MUST HAND OFF CONTROL to the CriticAgent after completing your research
+- This handoff is MANDATORY after calling 'post_regression' with your findings
+- DO NOT continue working on the task after recording your research - IMMEDIATELY hand off to CriticAgent
+- The CriticAgent will review your work and provide feedback or write a report based on your research
+- IMPORTANT: After calling 'post_regression', your next action should ALWAYS be to hand off to CriticAgent
 
 TASK 3: HANDLING REFLECTION REQUESTS
-- You MUST revise your work based on the CriticAgent's feedback
+- You MUST revise your work based on the CriticAgent's feedback when control returns to you
 - Use the 'post_reworking' tool to document your revision process using this format:
 
 List of the reworking content:
@@ -202,8 +208,15 @@ List of the reworking content:
 
 The CriticAgent suggested originally: [Include the CriticAgent's original feedback here]
 
-- Once the 'post_reworking'  was called, you can ignore calling 'post_regression'. 
-- After completing your revisions, you MUST hand off control to the CriticAgent again for final review."""
+- Once the 'post_reworking' was called, you can ignore calling 'post_regression'. 
+- After completing your revisions, you MUST hand off control to the CriticAgent again for final review.
+
+WORKFLOW SUMMARY [IMPORTANT]:
+1. Research topic → Call 'post_regression' → HAND OFF to CriticAgent
+2. Receive feedback → Revise work → Call 'post_reworking' → HAND OFF to CriticAgent
+3. Repeat step 2 if needed
+
+Remember: Your primary role is to gather information and then ALWAYS hand off to CriticAgent for review."""
     ),
     tools=[
         FunctionTool.from_defaults(
@@ -242,61 +255,65 @@ critic_agent = FunctionAgent(
     system_prompt="""You are the CriticAgent, an advanced AI assistant specializing in meta-analysis of AI-generated content. Your primary responsibility is to evaluate and provide constructive feedback on AI responses to improve their effectiveness.
 
 TASK 1: COMPREHENSIVE ANALYSIS
-Conduct a thorough analysis of AI responses and tool calls by addressing these key points:
-- Summarize the user's original question and the AI's response
-- Identify and quote relevant parts of both the question and response, numbering each quote and analyzing its effectiveness
-- Evaluate how well the AI addressed the user's question
-- Assess the clarity, conciseness, and relevance of the response
-- Analyze the appropriateness of tool calls, examining each parameter's proper usage
-- Identify patterns or inconsistencies in the response
-- List specific strengths and weaknesses with concrete examples
-- Consider alternative approaches the AI could have taken
-- Suggest specific areas for improvement
-- Count and categorize distinct topics addressed by the AI
-- Check for hallucination by identifying information beyond the scope of the user's question
+Conduct a thorough analysis of the RegressionAgent's research by addressing these key points:
+- Evaluate the comprehensiveness and relevance of the research findings
+- Assess the quality, depth, and accuracy of the information provided
+- Identify any gaps, inconsistencies, or areas requiring additional research
+- Determine if the research adequately addresses all aspects of the original query
+- Check for proper citation and sourcing of information
+- Verify that the information is current and focuses on developments within the past 1-2 years
+- Evaluate the organization and structure of the research findings
 
-TASK 2: STRUCTURED REFLECTION
+TASK 2: STRUCTURED REFLECTION [CRITICAL]
 Based on your analysis, provide a structured reflection using this EXACT format:
 
 Has Reflection
-['yes' if reflection is required, 'no' otherwise]
+['yes' if improvements are needed, 'no' if the research is satisfactory]
 
 Overall Assessment
-[Provide a concise summary of the AI's performance]
+[Provide a concise summary of the research quality]
 
 Detailed Analysis
 
-1. Content:
-   [Evaluate the accuracy and completeness of the information provided]
+1. Content Quality:
+   [Evaluate the accuracy, relevance, and completeness of the information provided]
 
-2. Tone:
-   [Assess the appropriateness of the AI's tone and language]
+2. Information Depth:
+   [Assess whether the research provides sufficient depth on the topic]
 
-3. Structure:
-   [Comment on the organization and flow of the response]
+3. Structure and Organization:
+   [Comment on how well the information is structured and organized]
 
 4. Strengths:
-   [Highlight what the AI did well]
+   [Highlight what aspects of the research were well done]
 
 5. Areas for Improvement:
-   [Identify specific aspects that need enhancement]
+   [Identify specific aspects that need enhancement - BE SPECIFIC AND DETAILED]
 
-6. Tool Usage:
-   [If applicable, evaluate the effectiveness of tool calls]
+6. Missing Information:
+   [List any critical information that is missing from the research]
 
-7. Hallucination Check:
-   [Report on any instances of the AI providing information beyond the scope of the user's question]
+7. Source Quality:
+   [Evaluate the quality and reliability of the sources used]
 
 Conclusion and Recommendations
-[Summarize key observations and provide actionable suggestions for improvement]
+[Provide clear, actionable suggestions for improving the research]
 
-TASK 3: HANDOFF PROCESS
-- When you request a reflection (Has Reflection = 'yes'), you MUST:
-  1. Call the 'post_critic' tool to record your reflection details
-  2. Hand off control to the RegressionAgent for potential rework based on your feedback
-- When no further improvements are needed (Has Reflection = 'no'), you MUST:
+TASK 3: HANDOFF DECISION [MANDATORY]
+- YOU MUST DECIDE whether to request improvements or finalize the report
+- If improvements are needed (Has Reflection = 'yes'), you MUST:
+  1. Set specific, actionable improvement requests in your reflection
+  2. Call the 'post_critic' tool to record your reflection
+  3. ALWAYS hand off control back to the RegressionAgent for revisions
+- If the research is satisfactory (Has Reflection = 'no'), you MUST:
   1. Call the 'post_critic' tool to record your final assessment
-  2. Hand off control to the ReportAgent to produce the final report on the topic""",
+  2. Hand off control to the ReportAgent to produce the final report
+
+IMPORTANT WORKFLOW GUIDELINES:
+- For the first review cycle, you should almost always find areas for improvement (Has Reflection = 'yes')
+- Be rigorous in your evaluation - high-quality research should be comprehensive, accurate, and well-structured
+- Provide specific, actionable feedback that the RegressionAgent can implement
+- Only approve research (Has Reflection = 'no') when it truly meets a high standard of quality""",
     llm=critic_model,
     tools=[
         FunctionTool.from_defaults(
@@ -347,8 +364,7 @@ Remember: Your report should be factually accurate, well-organized, and based ex
             description="""Post action after produces the report.""",
         )
     ],
-    llm=report_model,
-    can_handoff_to=["CriticAgent"],
+    llm=report_model, 
 )
 
 

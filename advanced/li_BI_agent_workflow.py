@@ -10,9 +10,11 @@ import requests
 from dotenv import load_dotenv
 from langchain_community.tools import BraveSearch, DuckDuckGoSearchRun
 from langchain_community.utilities import GoogleSerperAPIWrapper
-from llama_index.core.agent.workflow import AgentWorkflow, FunctionAgent
+from llama_index.core.agent.workflow import (AgentWorkflow, FunctionAgent,
+                                             ReActAgent)
 from llama_index.core.tools import FunctionTool
 from llama_index.core.workflow import Context
+from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.gemini import Gemini
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -39,12 +41,12 @@ SEED = os.getenv("SEED", 42)
 
 # %%
 regress_model = Gemini(
-    model="models/gemini-1.5-flash",
+    model="models/gemini-2.0-flash",
     max_tokens=8000,
     location=os.getenv("GOOGLE_CLOUD_REGION"),
     top_p=float(os.getenv("LLM_TOP_P", 1.0)),
     top_k=int(os.getenv("LLM_TOP_K", 30)),
-    temperature=0.,
+    temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
 )
 
 critic_model = Gemini(
@@ -67,49 +69,48 @@ report_model = Gemini(
 
 
 # %%
-def get_current_datetime() -> str:
+async def get_current_datetime(ctx: Context) -> str:
     """Useful for getting the current datetime."""
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logger.info(f"🧭 Retrieved current time: {current_time}")
     return current_time
 
 
-def web_search(
+async def web_search(
+    ctx: Context,
     query: str = Field(description="The mandatory query to search on the web."),
 ) -> str:
     """Useful action to search on the web."""
     logger.info(f"🔍 Searching on web: \n{query}")
     result = []
-    try:
-        google_search = GoogleSerperAPIWrapper(k=10).run(query)
-        result.append(google_search)
-        pp(google_search)
-    except:
-        pass
-
     # try:
-    #     brave_search_json = BraveSearch.from_api_key(
-    #         api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
-    #         search_kwargs={"count": 10},
-    #     ).run(query)
-    #     brave_search = json.dumps(brave_search_json)
-    #     result.append(brave_search)
-    #     pp(brave_search)
+    #     google_search = GoogleSerperAPIWrapper(k=10).run(query)
+    #     result.append(google_search)
     # except:
     #     pass
+
+    try:
+        brave_search_json = BraveSearch.from_api_key(
+            api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
+            search_kwargs={"count": 10},
+        ).run(query)
+        brave_search = json.dumps(brave_search_json)
+        result.append(brave_search)
+    except:
+        pass
 
     # try:
     #     duckduckgo_search = DuckDuckGoSearchRun().run(query)
     #     logger.debug(f"🔍 DuckDuckGo search result: \n{duckduckgo_search}")
     #     result.append(duckduckgo_search)
-    #     pp(duckduckgo_search)
     # except:
     #     pass
 
-    return "\n".join(result)
+    return "\n\n".join(result)
 
 
-def open_url(
+async def open_url(
+    ctx: Context,
     website_url: str = Field(description="Mandatory website url to read"),
 ) -> str:
     """A tool that can be used to read the content behind a URL of a website."""
@@ -136,14 +137,13 @@ async def post_critic(
     current_state["critic_steps"] = int(current_state.get("critic_steps", 0)) + 1
     await ctx.set("state", current_state)
     logger.debug(f"😉 Critic step updated: {await ctx.get('state')}")
-    if int(current_state.get("critic_steps", 0)) >= 3:
-        logger.debug(f"💥 Critic max-iter reached.")
-        raise Exception("Stop flow")
+
     logger.debug(f"👌 Critic done: {int(current_state.get('critic_steps', 0))}")
     return reflection
 
 
-def post_regression(
+async def post_regression(
+    ctx: Context,
     regression_content: str = Field(description="The content of the regression."),
 ) -> Any:
     """Post action to note the regression content."""
@@ -151,7 +151,8 @@ def post_regression(
     return regression_content
 
 
-def post_reworking(
+async def post_reworking(
+    ctx: Context,
     reworking_content: str = Field(description="The content of the reworking."),
 ) -> Any:
     """Post action to note the reworking content."""
@@ -159,7 +160,8 @@ def post_reworking(
     return reworking_content
 
 
-def post_report(
+async def post_report(
+    ctx: Context,
     report_content: str = Field(description="The content of the report."),
 ) -> Any:
     """Post action after reporting."""
@@ -176,7 +178,7 @@ def post_report(
 
 
 # %%
-regression_agent = FunctionAgent(
+regression_agent = ReActAgent(
     name="RegressionAgent",
     description="AI assistant specialized in researching and analyzing topics with a focus on developments over the past 1-2 years.",
     system_prompt=(
@@ -187,17 +189,14 @@ TASK 1: RESEARCH AND DOCUMENTATION
 - Collect and organize detailed notes focusing on developments within the last 1-2 years
 - Use the 'post_regression' tool to record your research findings
 - Ensure your notes are significant, meaningful, and informative before proceeding
-- You must use tool 'open_url' to retrieve the information from the web if any web links were provided by results of web-search.
 
-TASK 2: HANDOFF TO CriticAgent [CRITICAL]
-- YOU MUST HAND OFF CONTROL to the CriticAgent after completing your research
-- This handoff is MANDATORY after calling 'post_regression' with your findings
-- DO NOT continue working on the task after recording your research - IMMEDIATELY hand off to CriticAgent
-- The CriticAgent will review your work and provide feedback or write a report based on your research
-- IMPORTANT: After calling 'post_regression', your next action should ALWAYS be to hand off to CriticAgent
+TASK 2: HANDOFF TO CriticAgent
+- Once you have gathered sufficient information, hand off control to the CriticAgent
+- The CriticAgent will review your work and write a report based on your research
+- Only transfer control after you have compiled comprehensive notes on the topic
 
 TASK 3: HANDLING REFLECTION REQUESTS
-- You MUST revise your work based on the CriticAgent's feedback when control returns to you
+- You MUST revise your work based on the CriticAgent's feedback
 - Use the 'post_reworking' tool to document your revision process using this format:
 
 List of the reworking content:
@@ -208,39 +207,33 @@ List of the reworking content:
 
 The CriticAgent suggested originally: [Include the CriticAgent's original feedback here]
 
-- Once the 'post_reworking' was called, you can ignore calling 'post_regression'. 
-- After completing your revisions, you MUST hand off control to the CriticAgent again for final review.
-
-WORKFLOW SUMMARY [IMPORTANT]:
-1. Research topic → Call 'post_regression' → HAND OFF to CriticAgent
-2. Receive feedback → Revise work → Call 'post_reworking' → HAND OFF to CriticAgent
-3. Repeat step 2 if needed
-
-Remember: Your primary role is to gather information and then ALWAYS hand off to CriticAgent for review."""
+- Never hand off to the 'report_agent' directly.
+- Once the 'post_reworking'  was called, you can ignore calling 'post_regression'. 
+- After completing your revisions, you MUST hand off control to the CriticAgent again for final review."""
     ),
     tools=[
         FunctionTool.from_defaults(
-            fn=get_current_datetime,
+            async_fn=get_current_datetime,
             name="get_current_datetime",
             description="A tool that can be used to get the current datetime.",
         ),
         FunctionTool.from_defaults(
-            fn=web_search,
+            async_fn=web_search,
             name="web_search",
             description="""a web-search engine, useful for when you need to answer questions about current events, input should be a mandatory search query.""",
         ),
         FunctionTool.from_defaults(
-            fn=open_url,
+            async_fn=open_url,
             name="open_url",
             description="A tool that can be used to read the content behind a URL of a website.",
         ),
         FunctionTool.from_defaults(
-            fn=post_regression,
+            async_fn=post_regression,
             name="post_regression",
             description="Post action to note the regression content after the regression.",
         ),
         FunctionTool.from_defaults(
-            fn=post_reworking,
+            async_fn=post_reworking,
             name="post_reworking",
             description="Post action to note the reworking content after the reworking.",
         ),
@@ -249,71 +242,67 @@ Remember: Your primary role is to gather information and then ALWAYS hand off to
     can_handoff_to=["CriticAgent"],
 )
 
-critic_agent = FunctionAgent(
+critic_agent = ReActAgent(
     name="CriticAgent",
     description="You are the CriticAgent, an advanced AI assistant specializing in meta-analysis of AI-generated content.",
     system_prompt="""You are the CriticAgent, an advanced AI assistant specializing in meta-analysis of AI-generated content. Your primary responsibility is to evaluate and provide constructive feedback on AI responses to improve their effectiveness.
 
 TASK 1: COMPREHENSIVE ANALYSIS
-Conduct a thorough analysis of the RegressionAgent's research by addressing these key points:
-- Evaluate the comprehensiveness and relevance of the research findings
-- Assess the quality, depth, and accuracy of the information provided
-- Identify any gaps, inconsistencies, or areas requiring additional research
-- Determine if the research adequately addresses all aspects of the original query
-- Check for proper citation and sourcing of information
-- Verify that the information is current and focuses on developments within the past 1-2 years
-- Evaluate the organization and structure of the research findings
+Conduct a thorough analysis of AI responses and tool calls by addressing these key points:
+- Summarize the user's original question and the AI's response
+- Identify and quote relevant parts of both the question and response, numbering each quote and analyzing its effectiveness
+- Evaluate how well the AI addressed the user's question
+- Assess the clarity, conciseness, and relevance of the response
+- Analyze the appropriateness of tool calls, examining each parameter's proper usage
+- Identify patterns or inconsistencies in the response
+- List specific strengths and weaknesses with concrete examples
+- Consider alternative approaches the AI could have taken
+- Suggest specific areas for improvement
+- Count and categorize distinct topics addressed by the AI
+- Check for hallucination by identifying information beyond the scope of the user's question
 
-TASK 2: STRUCTURED REFLECTION [CRITICAL]
+TASK 2: STRUCTURED REFLECTION
 Based on your analysis, provide a structured reflection using this EXACT format:
 
 Has Reflection
-['yes' if improvements are needed, 'no' if the research is satisfactory]
+['yes' if reflection is required, 'no' otherwise]
 
 Overall Assessment
-[Provide a concise summary of the research quality]
+[Provide a concise summary of the AI's performance]
 
 Detailed Analysis
 
-1. Content Quality:
-   [Evaluate the accuracy, relevance, and completeness of the information provided]
+1. Content:
+   [Evaluate the accuracy and completeness of the information provided]
 
-2. Information Depth:
-   [Assess whether the research provides sufficient depth on the topic]
+2. Tone:
+   [Assess the appropriateness of the AI's tone and language]
 
-3. Structure and Organization:
-   [Comment on how well the information is structured and organized]
+3. Structure:
+   [Comment on the organization and flow of the response]
 
 4. Strengths:
-   [Highlight what aspects of the research were well done]
+   [Highlight what the AI did well]
 
 5. Areas for Improvement:
-   [Identify specific aspects that need enhancement - BE SPECIFIC AND DETAILED]
+   [Identify specific aspects that need enhancement]
 
-6. Missing Information:
-   [List any critical information that is missing from the research]
+6. Tool Usage:
+   [If applicable, evaluate the effectiveness of tool calls]
 
-7. Source Quality:
-   [Evaluate the quality and reliability of the sources used]
+7. Hallucination Check:
+   [Report on any instances of the AI providing information beyond the scope of the user's question]
 
 Conclusion and Recommendations
-[Provide clear, actionable suggestions for improving the research]
+[Summarize key observations and provide actionable suggestions for improvement]
 
-TASK 3: HANDOFF DECISION [MANDATORY]
-- YOU MUST DECIDE whether to request improvements or finalize the report
-- If improvements are needed (Has Reflection = 'yes'), you MUST:
-  1. Set specific, actionable improvement requests in your reflection
-  2. Call the 'post_critic' tool to record your reflection
-  3. ALWAYS hand off control back to the RegressionAgent for revisions
-- If the research is satisfactory (Has Reflection = 'no'), you MUST:
+TASK 3: HANDOFF PROCESS
+- When you request a reflection (Has Reflection = 'yes'), you MUST:
+  1. Call the 'post_critic' tool to record your reflection details
+  2. Hand off control to the RegressionAgent for potential rework based on your feedback
+- When no further improvements are needed (Has Reflection = 'no'), you MUST:
   1. Call the 'post_critic' tool to record your final assessment
-  2. Hand off control to the ReportAgent to produce the final report
-
-IMPORTANT WORKFLOW GUIDELINES:
-- For the first review cycle, you should almost always find areas for improvement (Has Reflection = 'yes')
-- Be rigorous in your evaluation - high-quality research should be comprehensive, accurate, and well-structured
-- Provide specific, actionable feedback that the RegressionAgent can implement
-- Only approve research (Has Reflection = 'no') when it truly meets a high standard of quality""",
+  2. Hand off control to the ReportAgent to produce the final report on the topic""",
     llm=critic_model,
     tools=[
         FunctionTool.from_defaults(
@@ -359,12 +348,12 @@ Remember: Your report should be factually accurate, well-organized, and based ex
     ),
     tools=[
         FunctionTool.from_defaults(
-            fn=post_report,
+            async_fn=post_report,
             name="post_report",
             description="""Post action after produces the report.""",
         )
     ],
-    llm=report_model, 
+    llm=report_model,
 )
 
 
@@ -376,9 +365,7 @@ agent_workflow = AgentWorkflow(
         report_agent,
     ],
     root_agent=regression_agent.name,
-    initial_state={
-        "critic_steps": 0,
-    },
+    initial_state={"critic_steps": 0},
     verbose=VERBOSE,
     state_prompt="📣 Current state: {state}. User message: {msg}",
 )

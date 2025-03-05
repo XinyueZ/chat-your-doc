@@ -201,7 +201,7 @@ Chroma, FAISS
 | [assistants.py](intermediate/assistants.py)   | Use [OpenAI Assistants API](https://platform.openai.com/docs/assistants) in different ways | `streamlit run intermediate/assistants.py --server.port 8006 --server.enableCORS false` | [read](https://teetracker.medium.com/how-to-use-openai-assistants-api-2281d67486a0) ![](assets/guide/OpenAI_Assistant_Chat_And_Completions.jpeg) ![](assets/guide/OpenAI_Assistant_Function_And_Tool.jpeg) ![](assets/screens/assistants1.gif) ![](assets/screens/assistants2.gif) ![](assets/screens/assistants3.gif) | 
 | [hyde_retrieval.py](intermediate/hyde_retrieval.py)   | Implementation of [HyDE](https://arxiv.org/pdf/2212.10496.pdf) retrieval by  [LlamaIndex](https://www.llamaindex.ai/), hybrid, local or remote LLMs. | `streamlit run intermediate/hyde_retrieval.py --server.port 8007 --server.enableCORS false` | [read](https://teetracker.medium.com/rag-with-hypothetical-document-embeddings-hyde-0edeca23f891) ![](assets/guide/hyde_retrieval.jpg)   ![](assets/screens/hyde_retrieval.png)  ![](assets/screens/hyde_retrieval.gif)  | 
 
-## 💥 Advanced
+## Advanced
 
 | App | Description | Launch | Demo |
 | --- | --- | --- | --- |

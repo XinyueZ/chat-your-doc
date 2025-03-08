@@ -78,6 +78,9 @@ pip install -r requirements.txt
 👨🏻‍💻 [supervisor](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/lc_BI_supervisor.py)
 👨🏻‍💻 [swarm](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/lc_BI_swarm.py)
 
+[CrewAI / Hierarchical Manager: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/crewai-hierarchical-manager-build-reflection-enabled-agentic-flow-8255c8c414ec)
+👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/crewai_BI_agent.py)
+
 # Storage
 
 

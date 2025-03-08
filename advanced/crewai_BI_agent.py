@@ -22,7 +22,7 @@ regression_model = LLM(
 
 
 critic_model = LLM(
-    model="vertex_ai/claude-3-5-sonnet-v2@20241022",
+    model="vertex_ai/gemini-2.0-flash",
     timeout=float(os.getenv("LLM_TIMEOUT", 120)),
     temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
     top_p=float(os.getenv("LLM_TOP_P", 1.0)),
@@ -36,7 +36,7 @@ report_model = LLM(
 )
 
 supervisor_model = LLM(
-    model="vertex_ai/claude-3-5-sonnet-v2@20241022",
+    model="vertex_ai/gemini-2.0-flash",
     timeout=float(os.getenv("LLM_TIMEOUT", 120)),
     temperature=float(os.getenv("LLM_TEMPERATURE", 1.0)),
     top_p=float(os.getenv("LLM_TOP_P", 1.0)),
@@ -52,7 +52,6 @@ plan_agent = Agent(
         GetCurrentTimeTool(),
         SerperDevTool(),
         ScrapeWebsiteTool(),
-        DuckDuckGoSearchTool(),
         JinaReaderTool(),
     ],
     allow_delegation=False,
@@ -70,6 +69,7 @@ regression_agent = Agent(
     tools=[
         BraveSearchTool(),
         ScrapeWebsiteTool(),
+        DuckDuckGoSearchTool(),
         GetCurrentTimeTool(),
         FileReadTool(),
         JinaReaderTool(),
@@ -87,12 +87,11 @@ critic_agent = Agent(
     backstory="""Specializing in meta-analysis of AI-generated content. Your primary responsibility is to evaluate and provide constructive feedback on AI responses to improve their effectiveness.
 
 TASK 1: COMPREHENSIVE ANALYSIS
-Conduct a thorough analysis of AI responses and tool calls by addressing these key points:
+Conduct a thorough analysis of AI responses by addressing these key points:
 - Summarize the user's original question and the AI's response
 - Identify and quote relevant parts of both the question and response, numbering each quote and analyzing its effectiveness
 - Evaluate how well the AI addressed the user's question
-- Assess the clarity, conciseness, and relevance of the response
-- Analyze the appropriateness of tool calls, examining each parameter's proper usage
+- Assess the clarity, conciseness, and relevance of the response 
 - Identify patterns or inconsistencies in the response
 - List specific strengths and weaknesses with concrete examples
 - Consider alternative approaches the AI could have taken
@@ -124,12 +123,9 @@ Detailed Analysis
    [Highlight what the AI did well]
 
 5. Areas for Improvement:
-   [Identify specific aspects that need enhancement]
+   [Identify specific aspects that need enhancement] 
 
-6. Tool Usage:
-   [If applicable, evaluate the effectiveness of tool calls]
-
-7. Hallucination Check:
+6. Hallucination Check:
    [Report on any instances of the AI providing information beyond the scope of the user's question]
 
 Conclusion and Recommendations
@@ -204,11 +200,11 @@ research_supervisor_agent = Agent(
    - The CriticAgent will evaluate the regression findings
    - Based on the CriticAgent's decision:
      * If the CriticAgent requests revisions, activate the RegressionAgent again
-     * If the CriticAgent approves the regression, activate the ReportAgent
+     * If the CriticAgent approves the revision, activate the ReportAgent
 
 4. **Activate ReportAgent as coworker**:
-   - After the CriticAgent has approved the regression
-   - The ReportAgent will create the final report based on the regression findings
+   - After the CriticAgent has approved the revision from the RegressionAgent
+   - The ReportAgent will create the final report based on the revision findings from the RegressionAgent
    - IMPORTANT: Once the ReportAgent submits its report, the workflow is COMPLETE
    - Do NOT activate any other agents after the ReportAgent has submitted its report
    - The entire process ends when the ReportAgent delivers its final report
@@ -271,13 +267,13 @@ If you find yourself wanting to wrap the content in ```markdown ... ```, DO NOT 
 
 
 report_task = Task(
-    description="""Produce a final report based on the reorganized key points and main ideas, render it in a clear and organized format with new presentation-layout and structure.""",
+    description="""Produce a final report based on regression (if revision was needed) result, render it in a clear and organized format with new presentation-layout and structure.""",
     expected_output="""A good markdown format report.
 IMPORTANT: DO NOT USE ANY MARKDOWN CODE BLOCK SYNTAX (```). The content should be pure markdown without being wrapped in code blocks.
 If you find yourself wanting to wrap the content in ```markdown ... ```, DO NOT DO IT. The content should be directly written in markdown format.""",
     agent=report_agent,
     async_execution=False,
-    context=[critic_task],
+    context=[revision_task],
     output_file="output/crewai_BI_agent.md",
 )
 

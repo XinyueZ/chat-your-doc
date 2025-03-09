@@ -67,19 +67,18 @@ pip install -r requirements.txt
 
 # Agentic
 
-[LangChain/LangGraph: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/build-reflection-enabled-agent-9186a35c6581)
+- [LangChain/LangGraph: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/build-reflection-enabled-agent-9186a35c6581)
 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/lg_ollama_hands_on_reflection_agent.py)
-
-
-[Llama-Index/AgentWorkflow: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/llama-index-agentworkflow-build-reflection-enabled-agent-c887f07a8a86)
+- [Llama-Index/AgentWorkflow: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/llama-index-agentworkflow-build-reflection-enabled-agent-c887f07a8a86)
 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/li_BI_agent_workflow.py)
-
-[LangGraph / swarm and supervisor: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/langgraph-swarm-and-supervisor-build-reflection-enabled-agentic-flow-6c1af0502c6b)
+- [LangGraph / swarm and supervisor: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/langgraph-swarm-and-supervisor-build-reflection-enabled-agentic-flow-6c1af0502c6b)
 👨🏻‍💻 [supervisor](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/lc_BI_supervisor.py)
 👨🏻‍💻 [swarm](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/lc_BI_swarm.py)
-
-[CrewAI / Hierarchical Manager: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/crewai-hierarchical-manager-build-reflection-enabled-agentic-flow-8255c8c414ec)
+- [CrewAI / Hierarchical Manager: Build Reflection Enabled Agentic Flow](https://medium.com/@teetracker/crewai-hierarchical-manager-build-reflection-enabled-agentic-flow-8255c8c414ec)
 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/crewai_BI_agent.py)
+- [(Llama-Index Workflows)Translation Agent via Reflection Workflow](https://medium.com/@teetracker/llamaindex-workflow-translation-agent-via-reflection-workflow-7ed51eeb5257)
+👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/simple/llamaindex_workflow_reflection_flow.py)
+
 
 # Storage
 

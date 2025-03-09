@@ -5,12 +5,6 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 
 ----
 
-#### RAG 
-
-![](https://github.com/XinyueZ/chat-your-doc/blob/master/assets/images/Bildschirmfoto%202024-04-28%20um%2021.11.21.png)
-
-----
-
 - [Setup](#setup)
     - [Some keys](#some-keys)
     - [Conda](#conda)
@@ -25,9 +19,17 @@ Chat Your Doc is an experimental project aimed at exploring various applications
 - [Notebooks](#notebooks)
 - [Star History](#star-history)
 
-----
+#### Agentic flow, agentic system
 
-#### Knowledge Center
+- ![Example](https://miro.medium.com/v2/resize:fit:1262/format:webp/1*U08K948eTTToDvH3lHH2HA.png)
+- ![Example](https://miro.medium.com/v2/resize:fit:280/format:webp/1*mloXprT6wYpNaQB5cekoGw.png)
+- .....
+  
+#### RAG 
+
+![](https://github.com/XinyueZ/chat-your-doc/blob/master/assets/images/Bildschirmfoto%202024-04-28%20um%2021.11.21.png)
+
+#### Knowledge Center (standalone)
 
 Also, take a look at a use-case known as [Knowledge Center](https://github.com/XinyueZ/knowledge-center) that leverages different RAG or Chunking techniques in this repository.
 

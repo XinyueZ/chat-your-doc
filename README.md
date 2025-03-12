@@ -80,6 +80,7 @@ pip install -r requirements.txt
 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/crewai_BI_agent.py)
 - [(Llama-Index Workflows)Translation Agent via Reflection Workflow](https://medium.com/@teetracker/llamaindex-workflow-translation-agent-via-reflection-workflow-7ed51eeb5257)
 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/simple/llamaindex_workflow_reflection_flow.py)
+- OpenAI SDK 👨🏻‍💻 [code](https://github.com/XinyueZ/chat-your-doc/blob/master/advanced/openai_BI_agent.py)
 
 
 # Storage

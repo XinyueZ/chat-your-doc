@@ -484,7 +484,7 @@ def main():
         input="""# MacBook Pro Max (M4) Purchase Timing Analysis Request
 
 ## OBJECTIVE
-Conduct a comprehensive analysis of the optimal purchase timing for a MacBook Pro with M4 Max chip in Germany, based on historical price trends and market forecasts for 2025.
+Conduct a comprehensive analysis of the optimal purchase timing for a MacBook Pro with M4 Max chip in Germany, based on historical price trends and market forecasts for 2025. The usage of the machine is for AI development, especially for GenAI.
 
 ## PRODUCT SPECIFICATIONS
 - Product: MacBook Pro with M4 Max chip
@@ -518,12 +518,24 @@ Present findings in a structured Markdown report with the following sections:
    - Impact of Apple product release cycles on pricing
    - Correlation between major retail events and price reductions
 3. **Price Forecast**: 
-   - Projected price points throughout 2025
    - Confidence intervals for price predictions
    - Identification of potential price floors
-4. **Configuration Recommendations**: 
+   - Economic Context, the inflation rate (history and forecast trends), the output must cite the source.
+   - Historical Pricing Trends (Comparable Model) from Highest to Lowest (use table to present):
+   | Date           | Price (EUR) | 
+   |----------------|-------------|     
+   - Projected price range based on the seasonal range or date range points throughout the year that the user wants, from highest to lowest (use table to present):
+   | Seasonal or date range  | Price range (EUR) | 
+   |----------------|-------------| 
+
+4. **Configuration Recommendations** (use table to present): 
    - Minimum viable specifications for the M4 Max model
    - Cost-benefit analysis of various configuration options
+   - Best timing
+   - Table is formatted like:
+   | Component        | Base Configuration                                        | Mid-Range Configuration                                   | High-End Configuration                                      | Use Case Suitability                                                                                                         | Cost range | Benefit                                                                                                                             |Timing                                                                                                                             |
+|----------------|----------------------------------------------------------|------------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+
 5. **Strategic Recommendations**: 
    - Actionable purchasing strategy with specific timing windows
    - Risk mitigation approaches for potential price volatility
